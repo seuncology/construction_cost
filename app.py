@@ -1,31 +1,302 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 10 23:49:45 2025
+# # -*- coding: utf-8 -*-
+# """
+# Created on Fri Jan 10 23:49:45 2025
 
-@author: emate
-"""
+# @author: emate
+# """
 
-from flask import Flask, request, jsonify
-from flask import Flask, render_template
-from tabulate import tabulate  # For better data presentation
+# from flask import Flask, request, jsonify
+# from flask import Flask, render_template
+# from tabulate import tabulate  # For better data presentation
 
+# import sqlite3
+
+
+
+
+# app = Flask(__name__)
+
+# @app.route('/')
+# def home():
+#     return render_template('index.html')  # Replace 'home.html' with your actual HTML file name
+
+# @app.route('/calculate', methods=['GET', 'POST'])
+# def calculate():
+#     # Logic for calculating costs
+#     return "Calculation results here."
+
+
+# def connect_db(db_name="fb_jiji_merged.db"):
+#     try:
+#         conn = sqlite3.connect(db_name)
+#         return conn
+#     except sqlite3.Error as e:
+#         print(f"Error: {e}")
+#         return None
+
+# # Function 1: Calculate costs based on product quantities (partial matching)
+# def calculate_costs(conn, product_quantities):
+#     """
+#     Calculate the total cost for specified products and quantities using partial matching.
+#     Save results to the database in a new table.
+#     """
+#     cursor = conn.cursor()
+#     total_cost = 0
+#     breakdown = []
+
+#     # Create a table for calculated costs
+#     cursor.execute("""
+#         CREATE TABLE IF NOT EXISTS calculated_costs (
+#             Product_Matched TEXT,
+#             Keyword TEXT,
+#             Quantity INTEGER,
+#             Unit_Price REAL,
+#             Total_Cost REAL,
+#             Supplier TEXT,
+#             Location TEXT
+#         );
+#     """)
+
+#     for product_keyword, quantity in product_quantities.items():
+#         cursor.execute(
+#             "SELECT MIN(Price) AS cheapest_price, seller_name, Location, Product "
+#             "FROM fb_jiji_merged_tb WHERE Product LIKE ?;",
+#             (f"%{product_keyword}%",)
+#         )
+#         data = cursor.fetchone()
+#         if data and data[0]:
+#             cost = data[0] * quantity
+#             total_cost += cost
+#             breakdown.append({
+#                 "Product (Matched)": data[3],
+#                 "Keyword": product_keyword,
+#                 "Quantity": quantity,
+#                 "Unit Price": data[0],
+#                 "Total Cost": cost,
+#                 "Supplier": data[1],
+#                 "Location": data[2]
+#             })
+#             # Insert the result into the database
+#             cursor.execute("""
+#                 INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location)
+#                 VALUES (?, ?, ?, ?, ?, ?, ?);
+#             """, (data[3], product_keyword, quantity, data[0], cost, data[1], data[2]))
+#         else:
+#             breakdown.append({
+#                 "Product (Matched)": "N/A",
+#                 "Keyword": product_keyword,
+#                 "Quantity": quantity,
+#                 "Unit Price": "N/A",
+#                 "Total Cost": "N/A",
+#                 "Supplier": "N/A",
+#                 "Location": "N/A"
+#             })
+
+#     print("\nCost Calculation Breakdown:")
+#     print(tabulate(breakdown, headers="keys", tablefmt="pretty"))
+#     print(f"\nTotal Cost: {total_cost}")
+
+#     conn.commit()  # Save changes to the database
+
+# # Function 2: Recommend competitive suppliers based on cost and location (partial matching)
+# def recommend_suppliers(conn, product_keyword, preferred_location=None):
+#     """
+#     Recommend competitive suppliers for a product based on partial matching of product name.
+#     Save results to the database in a new table.
+#     """
+#     cursor = conn.cursor()
+
+#     # Create a table for recommended suppliers
+#     cursor.execute("""
+#         CREATE TABLE IF NOT EXISTS recommended_suppliers (
+#             Supplier TEXT,
+#             Location TEXT,
+#             Price REAL,
+#             Matched_Product TEXT,
+#             URL TEXT
+#         );
+#     """)
+
+#     # Define the basic query to match product names
+#     query = "SELECT seller_name, Location, Price, Product, URL FROM fb_jiji_merged_tb WHERE Product LIKE ?"
+#     params = [f"%{product_keyword}%"]
+
+#     # Add location filter if provided
+#     if preferred_location:
+#         query += " AND Location LIKE ?"
+#         params.append(f"%{preferred_location}%")
+
+#     query += " ORDER BY Price ASC;"  # Sort by price ascending
+
+#     cursor.execute(query, params)
+#     data = cursor.fetchall()
+
+#     if data:
+#         print(f"\nCompetitive Suppliers for products containing '{product_keyword}':")
+#         print(tabulate(data, headers=["Supplier", "Location", "Price", "Matched Product", "URL"], tablefmt="pretty"))
+#         # Insert data into the database
+#         for row in data:
+#             cursor.execute("""
+#                 INSERT INTO recommended_suppliers (Supplier, Location, Price, Matched_Product, URL)
+#                 VALUES (?, ?, ?, ?, ?);
+#             """, row)
+#     else:
+#         print(f"\nNo suppliers found for products containing '{product_keyword}' in location: {preferred_location if preferred_location else 'any'}.")
+
+#     conn.commit()  # Save changes to the database
+
+
+# @app.route('/calculate_costs', methods=['POST'])
+# def api_calculate_costs():
+#     data = request.json
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+#     try:
+#         # Call the existing calculate_costs function
+#         calculate_costs(conn, data["product_quantities"])
+#         return jsonify({"message": "Cost calculations completed. Check database for results."})
+#     finally:
+#         conn.close()
+
+# @app.route('/recommend_suppliers', methods=['POST'])
+# def api_recommend_suppliers():
+#     data = request.json
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+#     try:
+#         # Call the existing recommend_suppliers function
+#         recommend_suppliers(
+#             conn, data["product_keyword"], data.get("preferred_location", None)
+#         )
+#         return jsonify({"message": "Supplier recommendations completed. Check database for results."})
+#     finally:
+#         conn.close()
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+# from flask import Flask, request, jsonify, render_template
+# from tabulate import tabulate
+# import sqlite3
+
+# app = Flask(__name__)
+
+# # Database connection function
+# def connect_db(db_name="fb_jiji_merged.db"):
+#     try:
+#         conn = sqlite3.connect(db_name)
+#         return conn
+#     except sqlite3.Error as e:
+#         print(f"Error: {e}")
+#         return None
+
+# # Function to calculate costs
+# def calculate_costs(conn, product_list):
+#     cursor = conn.cursor()
+#     total_cost = 0
+#     breakdown = []
+
+#     cursor.execute("""
+#         CREATE TABLE IF NOT EXISTS calculated_costs (
+#             Product_Matched TEXT,
+#             Keyword TEXT,
+#             Quantity INTEGER,
+#             Unit_Price REAL,
+#             Total_Cost REAL,
+#             Supplier TEXT,
+#             Location TEXT
+#         );
+#     """)
+
+#     for item in product_list:
+#         product_keyword = item.get('product')
+#         quantity = int(item.get('quantity', 0))
+
+#         if not product_keyword or quantity <= 0:
+#             continue
+
+#         cursor.execute(
+#             "SELECT MIN(Price) AS cheapest_price, seller_name, Location, Product "
+#             "FROM fb_jiji_merged_tb WHERE Product LIKE ?;",
+#             (f"%{product_keyword}%",)
+#         )
+#         data = cursor.fetchone()
+#         if data and data[0]:
+#             cost = data[0] * quantity
+#             total_cost += cost
+#             breakdown.append({
+#                 "Product (Matched)": data[3],
+#                 "Keyword": product_keyword,
+#                 "Quantity": quantity,
+#                 "Unit Price": data[0],
+#                 "Total Cost": cost,
+#                 "Supplier": data[1],
+#                 "Location": data[2]
+#             })
+#             cursor.execute("""
+#                 INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location)
+#                 VALUES (?, ?, ?, ?, ?, ?, ?);
+#             """, (data[3], product_keyword, quantity, data[0], cost, data[1], data[2]))
+#         else:
+#             breakdown.append({
+#                 "Product (Matched)": "N/A",
+#                 "Keyword": product_keyword,
+#                 "Quantity": quantity,
+#                 "Unit Price": "N/A",
+#                 "Total Cost": "N/A",
+#                 "Supplier": "N/A",
+#                 "Location": "N/A"
+#             })
+
+#     conn.commit()
+#     return {"total_cost": total_cost, "breakdown": breakdown}
+
+# # API route for cost estimation
+# @app.route('/calculate_costs', methods=['POST'])
+# def api_calculate_costs():
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+
+#     try:
+#         # Parse form data from the front end
+#         product_list = []
+#         for key in request.form:
+#             if key.startswith('product_') and request.form[key]:
+#                 index = key.split('_')[1]
+#                 product = request.form[key]
+#                 quantity = request.form.get(f'quantity_{index}', 0)
+#                 product_list.append({"product": product, "quantity": quantity})
+
+#         # Call the calculate_costs function
+#         results = calculate_costs(conn, product_list)
+
+#         # Render the results on a response page (or update as needed for your front end)
+#         return render_template('results.html', total_cost=results["total_cost"], breakdown=results["breakdown"])
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         conn.close()
+
+# # Serve the HTML file
+# @app.route('/')
+# def home():
+#     return render_template('index.html')
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+
+
+from tabulate import tabulate
+from flask import Flask, request, jsonify, render_template
 import sqlite3
-
-
-
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return render_template('index.html')  # Replace 'home.html' with your actual HTML file name
-
-@app.route('/calculate', methods=['GET', 'POST'])
-def calculate():
-    # Logic for calculating costs
-    return "Calculation results here."
-
-
+# Database connection function
 def connect_db(db_name="fb_jiji_merged.db"):
     try:
         conn = sqlite3.connect(db_name)
@@ -34,17 +305,12 @@ def connect_db(db_name="fb_jiji_merged.db"):
         print(f"Error: {e}")
         return None
 
-# Function 1: Calculate costs based on product quantities (partial matching)
-def calculate_costs(conn, product_quantities):
-    """
-    Calculate the total cost for specified products and quantities using partial matching.
-    Save results to the database in a new table.
-    """
+# Function to calculate costs
+def calculate_costs(conn, product_list):
     cursor = conn.cursor()
     total_cost = 0
     breakdown = []
 
-    # Create a table for calculated costs
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS calculated_costs (
             Product_Matched TEXT,
@@ -57,7 +323,13 @@ def calculate_costs(conn, product_quantities):
         );
     """)
 
-    for product_keyword, quantity in product_quantities.items():
+    for item in product_list:
+        product_keyword = item.get('product')
+        quantity = int(item.get('quantity', 0))
+
+        if not product_keyword or quantity <= 0:
+            continue
+
         cursor.execute(
             "SELECT MIN(Price) AS cheapest_price, seller_name, Location, Product "
             "FROM fb_jiji_merged_tb WHERE Product LIKE ?;",
@@ -76,7 +348,6 @@ def calculate_costs(conn, product_quantities):
                 "Supplier": data[1],
                 "Location": data[2]
             })
-            # Insert the result into the database
             cursor.execute("""
                 INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location)
                 VALUES (?, ?, ?, ?, ?, ?, ?);
@@ -92,87 +363,80 @@ def calculate_costs(conn, product_quantities):
                 "Location": "N/A"
             })
 
-    print("\nCost Calculation Breakdown:")
-    print(tabulate(breakdown, headers="keys", tablefmt="pretty"))
-    print(f"\nTotal Cost: {total_cost}")
+    conn.commit()
+    return {"total_cost": total_cost, "breakdown": breakdown}
 
-    conn.commit()  # Save changes to the database
+# API route for cost estimation
+@app.route('/calculate_costs', methods=['POST'])
+def api_calculate_costs():
+    conn = connect_db()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
 
-# Function 2: Recommend competitive suppliers based on cost and location (partial matching)
+    try:
+        product_list = []
+        for key in request.form:
+            if key.startswith('product_') and request.form[key]:
+                index = key.split('_')[1]
+                product = request.form[key]
+                quantity = request.form.get(f'quantity_{index}', 0)
+                product_list.append({"product": product, "quantity": quantity})
+
+        results = calculate_costs(conn, product_list)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+# Function to recommend suppliers
 def recommend_suppliers(conn, product_keyword, preferred_location=None):
-    """
-    Recommend competitive suppliers for a product based on partial matching of product name.
-    Save results to the database in a new table.
-    """
     cursor = conn.cursor()
+    results = []
 
-    # Create a table for recommended suppliers
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS recommended_suppliers (
-            Supplier TEXT,
-            Location TEXT,
-            Price REAL,
-            Matched_Product TEXT,
-            URL TEXT
-        );
-    """)
-
-    # Define the basic query to match product names
     query = "SELECT seller_name, Location, Price, Product, URL FROM fb_jiji_merged_tb WHERE Product LIKE ?"
     params = [f"%{product_keyword}%"]
 
-    # Add location filter if provided
     if preferred_location:
         query += " AND Location LIKE ?"
         params.append(f"%{preferred_location}%")
 
-    query += " ORDER BY Price ASC;"  # Sort by price ascending
-
+    query += " ORDER BY Price ASC;"
     cursor.execute(query, params)
     data = cursor.fetchall()
 
-    if data:
-        print(f"\nCompetitive Suppliers for products containing '{product_keyword}':")
-        print(tabulate(data, headers=["Supplier", "Location", "Price", "Matched Product", "URL"], tablefmt="pretty"))
-        # Insert data into the database
-        for row in data:
-            cursor.execute("""
-                INSERT INTO recommended_suppliers (Supplier, Location, Price, Matched_Product, URL)
-                VALUES (?, ?, ?, ?, ?);
-            """, row)
-    else:
-        print(f"\nNo suppliers found for products containing '{product_keyword}' in location: {preferred_location if preferred_location else 'any'}.")
+    for row in data:
+        results.append({
+            "Supplier": row[0],
+            "Location": row[1],
+            "Price": row[2],
+            "Matched_Product": row[3],
+            "URL": row[4]
+        })
 
-    conn.commit()  # Save changes to the database
-
-
-@app.route('/calculate_costs', methods=['POST'])
-def api_calculate_costs():
-    data = request.json
-    conn = connect_db()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
-    try:
-        # Call the existing calculate_costs function
-        calculate_costs(conn, data["product_quantities"])
-        return jsonify({"message": "Cost calculations completed. Check database for results."})
-    finally:
-        conn.close()
+    return results
 
 @app.route('/recommend_suppliers', methods=['POST'])
 def api_recommend_suppliers():
-    data = request.json
+    data = request.form
     conn = connect_db()
     if not conn:
         return jsonify({"error": "Database connection failed"}), 500
+
     try:
-        # Call the existing recommend_suppliers function
-        recommend_suppliers(
-            conn, data["product_keyword"], data.get("preferred_location", None)
-        )
-        return jsonify({"message": "Supplier recommendations completed. Check database for results."})
+        product_keyword = data.get("product_keyword")
+        preferred_location = data.get("preferred_location")
+        results = recommend_suppliers(conn, product_keyword, preferred_location)
+        return jsonify({"results": results})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
+
