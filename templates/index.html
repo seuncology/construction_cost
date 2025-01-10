@@ -1,0 +1,63 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 10 23:51:16 2025
+
+@author: emate
+"""
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marketplace Tool</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Cost and Supplier Recommendations</h2>
+
+        <!-- Form for Cost Calculation -->
+        <form id="costForm">
+            <h4>Calculate Costs</h4>
+            <label for="productQuantities">Enter product quantities (JSON format):</label>
+            <textarea id="productQuantities" class="form-control" rows="3"></textarea>
+            <button type="button" class="btn btn-primary mt-3" onclick="calculateCosts()">Submit</button>
+        </form>
+
+        <!-- Form for Supplier Recommendations -->
+        <form id="supplierForm" class="mt-5">
+            <h4>Recommend Suppliers</h4>
+            <label for="productKeyword">Product Keyword:</label>
+            <input id="productKeyword" type="text" class="form-control">
+            <label for="preferredLocation" class="mt-2">Preferred Location (optional):</label>
+            <input id="preferredLocation" type="text" class="form-control">
+            <button type="button" class="btn btn-primary mt-3" onclick="recommendSuppliers()">Submit</button>
+        </form>
+
+        <div id="result" class="mt-5"></div>
+    </div>
+    <script>
+        async function calculateCosts() {
+            const productQuantities = JSON.parse(document.getElementById('productQuantities').value);
+            const response = await fetch('/calculate_costs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_quantities: productQuantities })
+            });
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+        }
+
+        async function recommendSuppliers() {
+            const productKeyword = document.getElementById('productKeyword').value;
+            const preferredLocation = document.getElementById('preferredLocation').value;
+            const response = await fetch('/recommend_suppliers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_keyword: productKeyword, preferred_location: preferredLocation })
+            });
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+        }
+    </script>
+</body>
+</html>
