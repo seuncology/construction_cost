@@ -91,7 +91,6 @@
 
         <div id="result" class="mt-5"></div>
     </div>
-
     <script>
         // Handle dynamic row addition and removal
         document.addEventListener('click', function(event) {
@@ -152,49 +151,41 @@
             `;
         });
     
-            // Handle supplier recommendations form submission
-            document.querySelector('form[action="/recommend_suppliers"]').addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(event.target);
-                const response = await fetch('/recommend_suppliers', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-
-                // Update the table generation code to include Reliability Score
-                document.getElementById('result').innerHTML = `
-                    <h4>Recommended Suppliers</h4>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Supplier</th>
-                                <th>Location</th>
-                                <th>Price</th>
-                                <th>Matched Product</th>
-                                <th>Reliability Score</th>
-                                <th>URL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${result.results.map(row => `
-                                <tr>
-                                    <td>${row['Supplier']}</td>
-                                    <td>${row['Location']}</td>
-                                    <td>${row['Price']}</td>
-                                    <td>${row['Matched_Product']}</td>
-                                    <td>${row['Reliability_Score']}</td>
-                                    <td><a href="${row['URL']}" target="_blank">View</a></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+        // Handle supplier recommendations form submission
+        document.querySelector('form[action="/recommend_suppliers"]').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await fetch('/recommend_suppliers', {
+                method: 'POST',
+                body: formData
             });
-
+            const result = await response.json();
+            document.getElementById('result').innerHTML = `
+                <h4>Recommended Suppliers</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Supplier</th>
+                            <th>Location</th>
+                            <th>Price</th>
+                            <th>Matched Product</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.results.map(row => `
+                            <tr>
+                                <td>${row['Supplier']}</td>
+                                <td>${row['Location']}</td>
+                                <td>${row['Price']}</td>
+                                <td>${row['Matched_Product']}</td>
+                                <td><a href="${row['URL']}" target="_blank">View</a></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
         });
     </script>
-    
 </body>
 </html>
