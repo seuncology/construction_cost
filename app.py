@@ -1197,8 +1197,120 @@ def api_calculate_costs():
     finally:
         conn.close()
 
+# # Function to recommend suppliers
+# def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset):
+#     try:
+#         cursor = conn.cursor()
+
+#         # SQL query to retrieve supplier recommendations
+#         query = """
+#         SELECT 
+#             Product, 
+#             Price, 
+#             Location, 
+#             URL, 
+#             Seller_name, 
+#             Average_Price, 
+#             Listings_Count, 
+#             Reliability_Score 
+#         FROM suppliers 
+#         WHERE Product LIKE ?
+#         """
+#         params = [f"%{product_keyword}%"]
+
+#         # Add location filter if specified
+#         if preferred_location:
+#             query += " AND Location LIKE ?"
+#             params.append(f"%{preferred_location}%")
+
+#         # Add limit and offset
+#         query += " LIMIT ? OFFSET ?"
+#         params.extend([limit, offset])
+
+#         # Execute the query
+#         cursor.execute(query, params)
+#         data = cursor.fetchall()
+
+#         # Map results to the expected output format
+#         results = []
+#         for row in data:
+#             # Ensure all fields are mapped correctly
+#             seller_name = row[4]
+#             location = row[2]
+#             price = row[1]
+#             product = row[0]
+#             reliability_score = row[7] if row[7] is not None else 0.0  # Default reliability score if None
+#             url = row[3]
+#             # seller_name = row[4]
+#             # average_price = row[5]
+#             # listings_count = row[6]
+            
+            
+#             results.append({
+#                 "Supplier": seller_name,            # Name of the supplier 
+#                 "Location": location,               # Supplier location
+#                 "Price": price,                     # Current price of the product                
+#                 "Matched Product": product,         # Include the product name 
+#                 "Reliability Score": reliability_score,  # Reliability score of the supplier
+#                 "URL": url,                        # Supplier/product URL
+#             })
+
+#         return results
+
+#     except Exception as e:
+#         logging.error(f"Error in recommending suppliers: {e}")
+#         return []
+    
+# # Supplier recommendation function using SQLite
+# def get_supplier_recommendations(product_keyword='', preferred_location='', limit=10):
+#     try:
+#         conn = connect_db()
+#         if not conn:
+#             return {"error": "Database connection failed."}
+
+#         cursor = conn.cursor()
+
+#         query = """
+#         SELECT product, price, location, url, name, average_price, listings_count, reliability_score 
+#         FROM fb_jiji_merged_tb WHERE product LIKE ?
+#         """
+#         params = ["%" + product_keyword + "%"]
+
+#         if preferred_location:
+#             query += " AND location LIKE ?"
+#             params.append("%" + preferred_location + "%")
+
+#         query += " LIMIT ?"
+#         params.append(limit)
+
+#         cursor.execute(query, params)
+#         results = cursor.fetchall()
+
+#         response = {
+#             "results": [
+#                 {
+#                     "Supplier": row[4],
+#                     "Location": row[2], 
+#                     "Price": row[1],
+#                     "Matched Product": row[0],
+#                     "Reliability Score": row[7],
+#                     "URL": row[3],
+
+#                 }
+#                 for row in results
+#             ]
+#         }
+
+#         conn.close()
+#         return response
+
+#     except Exception as e:
+#         logging.error("Error fetching supplier recommendations: " + str(e))
+#         return {"error": "An error occurred while fetching recommendations."}
+
+
 # Function to recommend suppliers
-def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset):
+def recommend_suppliers(conn, product_keyword, preferred_location, limit):
     try:
         cursor = conn.cursor()
 
@@ -1223,9 +1335,9 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
             query += " AND Location LIKE ?"
             params.append(f"%{preferred_location}%")
 
-        # Add limit and offset
-        query += " LIMIT ? OFFSET ?"
-        params.extend([limit, offset])
+        # Add limit
+        query += " LIMIT ?"
+        params.append(limit)
 
         # Execute the query
         cursor.execute(query, params)
@@ -1234,16 +1346,13 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
         # Map results to the expected output format
         results = []
         for row in data:
-            # Ensure all fields are mapped correctly
-            product = row[0]
-            price = row[1]
-            location = row[2]
-            url = row[3]
             seller_name = row[4]
-            average_price = row[5]
-            listings_count = row[6]
+            location = row[2]
+            price = row[1]
+            product = row[0]
             reliability_score = row[7] if row[7] is not None else 0.0  # Default reliability score if None
-            
+            url = row[3]
+
             results.append({
                 "Supplier": seller_name,            # Name of the supplier 
                 "Location": location,               # Supplier location
@@ -1255,10 +1364,13 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
 
         return results
 
+    except sqlite3.DatabaseError as db_err:
+        logging.error(f"Database error: {db_err}")
+        return {"error": "A database error occurred."}
     except Exception as e:
         logging.error(f"Error in recommending suppliers: {e}")
-        return []
-    
+        return {"error": "An unexpected error occurred."}
+
 # Supplier recommendation function using SQLite
 def get_supplier_recommendations(product_keyword='', preferred_location='', limit=10):
     try:
@@ -1293,7 +1405,6 @@ def get_supplier_recommendations(product_keyword='', preferred_location='', limi
                     "Matched Product": row[0],
                     "Reliability Score": row[7],
                     "URL": row[3],
-
                 }
                 for row in results
             ]
@@ -1302,9 +1413,13 @@ def get_supplier_recommendations(product_keyword='', preferred_location='', limi
         conn.close()
         return response
 
+    except sqlite3.DatabaseError as db_err:
+        logging.error(f"Database error: {db_err}")
+        return {"error": "A database error occurred."}
     except Exception as e:
         logging.error("Error fetching supplier recommendations: " + str(e))
-        return {"error": "An error occurred while fetching recommendations."}
+        return {"error": "An unexpected error occurred."}
+
 
 # Render the home page
 @app.route('/')
