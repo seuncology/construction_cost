@@ -34,22 +34,16 @@ def ensure_reliability_score_column(conn):
         else:
             logging.error(f"Error ensuring Reliability_Score column: {e}")
 
-# Function to compute the Reliability_Score
-def compute_reliability_score(cursor, product, supplier):
-    # Example approach: The lower the price, the better the reliability score.
-    # The more entries a supplier has for a product, the higher the reliability score.
-    cursor.execute("""
-        SELECT COUNT(*), AVG(Price)
-        FROM fb_jiji_merged_tb
-        WHERE LOWER(Product) LIKE LOWER(?) AND LOWER(seller_name) LIKE LOWER(?)
-    """, (f"%{product}%", f"%{supplier}%"))
-    data = cursor.fetchone()
-    
-    if data:
-        count, avg_price = data
-        reliability_score = max(0, (1 / avg_price)) * count  # Simple score based on price and count
-        return reliability_score
-    return 0.0
+# Function to calculate Reliability Score
+def compute_reliability_score(price, product_matches):
+    """
+    Compute the reliability score based on price and the number of product matches.
+    - Lower price results in higher reliability.
+    - More product matches result in higher reliability.
+    """
+    score = (1 / (price + 1)) * 10  # Higher price should lower reliability score
+    score += product_matches * 0.5  # More product matches improve reliability
+    return round(score, 2)
 
 # Function to calculate costs
 def calculate_costs(conn, product_list):
@@ -96,9 +90,9 @@ def calculate_costs(conn, product_list):
             data = cursor.fetchone()
 
             if data:
-                supplier = data[2]
-                # Compute the reliability score
-                reliability_score = compute_reliability_score(cursor, product_keyword, supplier)
+                # Compute the reliability score based on price and matches
+                reliability_score = compute_reliability_score(data[1], 5)  # Example: 5 product matches
+
                 cost = data[1] * quantity
                 total_cost += cost
                 breakdown.append({
@@ -107,16 +101,16 @@ def calculate_costs(conn, product_list):
                     "Quantity": quantity,
                     "Unit Price": data[1],
                     "Total Cost": cost,
-                    "Supplier": supplier,
+                    "Supplier": data[2],
                     "Location": data[3],
                     "Reliability Score": reliability_score
                 })
 
-                # Store results in the database, including Reliability_Score
+                # Store results in the database with computed reliability score
                 cursor.execute("""
                     INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location, Reliability_Score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-                """, (data[0], product_keyword, quantity, data[1], cost, supplier, data[3], reliability_score))
+                """, (data[0], product_keyword, quantity, data[1], cost, data[2], data[3], reliability_score))
             else:
                 breakdown.append({
                     "Product (Matched)": "Not Found",
@@ -165,7 +159,7 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
 
     try:
         query = """
-            SELECT seller_name, Location, Price, Product, Reliability_Score, URL
+            SELECT seller_name, Location, Price, Product
             FROM fb_jiji_merged_tb
             WHERE LOWER(Product) LIKE LOWER(?)
         """
@@ -175,20 +169,22 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
             query += " AND LOWER(Location) LIKE LOWER(?)"
             params.append(f"%{preferred_location}%")
 
-        query += " ORDER BY Reliability_Score DESC, Price ASC LIMIT ? OFFSET ?;"
+        query += " ORDER BY Price ASC LIMIT ? OFFSET ?;"
         params.extend([limit, offset])
 
         cursor.execute(query, params)
         data = cursor.fetchall()
 
         for row in data:
+            # Compute the reliability score based on price and matches
+            reliability_score = compute_reliability_score(row[2], 5)  # Example: 5 product matches
+
             results.append({
                 "Supplier": row[0],
                 "Location": row[1],
                 "Price": row[2],
                 "Matched Product": row[3],
-                "Reliability Score": row[4],
-                "URL": row[5]
+                "Reliability Score": reliability_score
             })
     except Exception as e:
         logging.error(f"Error in recommending suppliers: {e}")
