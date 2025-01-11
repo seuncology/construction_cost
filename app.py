@@ -807,50 +807,140 @@ def api_calculate_costs():
         conn.close()
 
 # Function to recommend suppliers
-# Function to recommend suppliers
-def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10, offset=0):
-    cursor = conn.cursor()
-    results = []
-
+def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset):
     try:
+        cursor = conn.cursor()
+
+        # SQL query to retrieve supplier recommendations
         query = """
-            SELECT Product, Price, Location, URL, Seller_name, Reliability_Score
-            FROM fb_jiji_merged_tb
-            WHERE LOWER(Product) LIKE LOWER(?)
+        SELECT 
+            Product, 
+            Price, 
+            Location, 
+            URL, 
+            Seller_name, 
+            Average_Price, 
+            Listings_Count, 
+            Reliability_Score 
+        FROM suppliers 
+        WHERE Product LIKE ?
         """
         params = [f"%{product_keyword}%"]
 
+        # Add location filter if specified
         if preferred_location:
-            query += " AND LOWER(Location) LIKE LOWER(?)"
+            query += " AND Location LIKE ?"
             params.append(f"%{preferred_location}%")
 
-        query += " ORDER BY Price ASC LIMIT ? OFFSET ?;"
+        # Add limit and offset
+        query += " LIMIT ? OFFSET ?"
         params.extend([limit, offset])
 
+        # Execute the query
         cursor.execute(query, params)
         data = cursor.fetchall()
 
+        # Map results to the expected output format
+        results = []
         for row in data:
-            # Ensure all required fields are properly mapped
+            # Ensure all fields are mapped correctly
             product = row[0]
             price = row[1]
             location = row[2]
             url = row[3]
             seller_name = row[4]
-            reliability_score = row[5] if row[5] is not None else 0.0  # Default reliability score if None
+            average_price = row[5]
+            listings_count = row[6]
+            reliability_score = row[7] if row[7] is not None else 0.0  # Default reliability score if None
 
             results.append({
-                "Matched Product": product,  # Explicitly include the product name
-                "Price": price,
-                "Location": location,
-                "URL": url,
-                "Supplier": seller_name,
-                "Reliability Score": reliability_score  # Include reliability score in the output
+                "Matched Product": product,           # Include the product name
+                "Price": price,                       # Current price of the product
+                "Location": location,                 # Supplier location
+                "URL": url,                           # Supplier/product URL
+                "Supplier": seller_name,              # Name of the supplier
+                "Average Price": average_price,       # Average price of the product
+                "Listings Count": listings_count,     # Number of product listings
+                "Reliability Score": reliability_score  # Reliability score of the supplier
             })
+
+        return results
+
     except Exception as e:
         logging.error(f"Error in recommending suppliers: {e}")
+        return []
 
-    return results
+# API route for supplier recommendations
+@app.route('/recommend_suppliers', methods=['POST'])
+def api_recommend_suppliers():
+    conn = connect_db()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    try:
+        data = request.form
+        product_keyword = data.get("product_keyword")
+        preferred_location = data.get("preferred_location")
+        limit = int(data.get("limit", 10))
+        offset = int(data.get("offset", 0))
+
+        if not product_keyword:
+            return jsonify({"error": "Product keyword is required"}), 400
+
+        results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
+        return jsonify({"results": results})
+    except Exception as e:
+        logging.error(f"Error in supplier recommendation: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Function to recommend suppliers
+# Function to recommend suppliers
+# def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10, offset=0):
+#     cursor = conn.cursor()
+#     results = []
+
+#     try:
+#         query = """
+#             SELECT Product, Price, Location, URL, Seller_name, Reliability_Score
+#             FROM fb_jiji_merged_tb
+#             WHERE LOWER(Product) LIKE LOWER(?)
+#         """
+#         params = [f"%{product_keyword}%"]
+
+#         if preferred_location:
+#             query += " AND LOWER(Location) LIKE LOWER(?)"
+#             params.append(f"%{preferred_location}%")
+
+#         query += " ORDER BY Price ASC LIMIT ? OFFSET ?;"
+#         params.extend([limit, offset])
+
+#         cursor.execute(query, params)
+#         data = cursor.fetchall()
+
+#         for row in data:
+#             # Ensure all required fields are properly mapped
+#             product = row[0]
+#             price = row[1]
+#             location = row[2]
+#             url = row[3]
+#             seller_name = row[4]
+#             reliability_score = row[5] if row[5] is not None else 0.0  # Default reliability score if None
+
+#             results.append({
+#                 "Matched Product": product,  # Explicitly include the product name
+#                 "Price": price,
+#                 "Location": location,
+#                 "URL": url,
+#                 "Supplier": seller_name,
+#                 "Reliability Score": reliability_score  # Include reliability score in the output
+#             })
+#     except Exception as e:
+#         logging.error(f"Error in recommending suppliers: {e}")
+
+#     return results
 
 
 # # API route for supplier recommendations
@@ -888,30 +978,30 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
 #     app.run(debug=True)
 
 
-# API route for supplier recommendations
-@app.route('/recommend_suppliers', methods=['POST'])
-def api_recommend_suppliers():
-    conn = connect_db()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
+# # API route for supplier recommendations
+# @app.route('/recommend_suppliers', methods=['POST'])
+# def api_recommend_suppliers():
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
 
-    try:
-        data = request.form
-        product_keyword = data.get("product_keyword")
-        preferred_location = data.get("preferred_location")
-        limit = int(data.get("limit", 10))
-        offset = int(data.get("offset", 0))
+#     try:
+#         data = request.form
+#         product_keyword = data.get("product_keyword")
+#         preferred_location = data.get("preferred_location")
+#         limit = int(data.get("limit", 10))
+#         offset = int(data.get("offset", 0))
 
-        if not product_keyword:
-            return jsonify({"error": "Product keyword is required"}), 400
+#         if not product_keyword:
+#             return jsonify({"error": "Product keyword is required"}), 400
 
-        results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
-        return jsonify({"results": results})
-    except Exception as e:
-        logging.error(f"Error in supplier recommendation: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
+#         results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
+#         return jsonify({"results": results})
+#     except Exception as e:
+#         logging.error(f"Error in supplier recommendation: {e}")
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         conn.close()
 
 # Render the home page
 @app.route('/')
