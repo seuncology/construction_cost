@@ -160,11 +160,11 @@ def recommend_suppliers():
 
         results = [
             {
-                "Supplier": row[4],
-                "Location": row[2],
-                "Price": row[1],
-                "Matched Product": row[0],
-                "URL": row[3],
+                "Supplier": row[0],
+                "Location": row[1],
+                "Price": row[2],
+                "Matched Product": row[3],
+                "URL": row[4],
             }
             for row in data
         ]
