@@ -86,12 +86,11 @@
             <input id="productKeyword" name="product_keyword" type="text" class="form-control">
             <label for="preferredLocation" class="mt-2">Preferred Location (optional):</label>
             <input id="preferredLocation" name="preferred_location" type="text" class="form-control">
-            <label for="limit" class="mt-2">Limit (optional):</label>
-            <input id="limit" name="limit" type="number" class="form-control" value="10">
-            <label for="offset" class="mt-2">Offset (optional):</label>
-            <input id="offset" name="offset" type="number" class="form-control" value="0">
+            <label for="limit" class="mt-2">Limit Results:</label>
+            <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Enter limit (e.g., 5)">
             <button type="submit" class="btn btn-primary mt-3">Submit</button>
         </form>
+        
         
 
         <div id="result" class="mt-5"></div>
@@ -192,7 +191,7 @@
                 </table>
             `;
         });
-***/
+
 // Handle supplier recommendations form submission
 document.querySelector('form[action="/recommend_suppliers"]').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -250,6 +249,63 @@ document.querySelector('form[action="/recommend_suppliers"]').addEventListener('
         document.getElementById('result').innerHTML = `<p class="text-danger">Failed to fetch supplier recommendations. Please try again later.</p>`;
     }
 });
+***/
+// Handle supplier recommendations form submission
+document.querySelector('form[action="/recommend_suppliers"]').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
+    try {
+        const response = await fetch('/recommend_suppliers', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch supplier recommendations.');
+        }
+
+        const result = await response.json();
+
+        if (!result.results || result.results.length === 0) {
+            document.getElementById('result').innerHTML = `<p class="text-warning">No suppliers found for the given criteria. Please refine your search.</p>`;
+            return;
+        }
+
+        document.getElementById('result').innerHTML = `
+            <h4>Recommended Suppliers (Limit: ${formData.get('limit') || 'All'})</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Matched Product</th>
+                        <th>Reliability Score</th>
+                        <th>URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${result.results.map(row => `
+                        <tr>
+                            <td>${row['Supplier'] || 'N/A'}</td>
+                            <td>${row['Location'] || 'N/A'}</td>
+                            <td>${row['Price'] || 'N/A'}</td>
+                            <td>${row['Matched Product'] || 'N/A'}</td>
+                            <td>${row['Reliability Score'] ? row['Reliability Score'].toFixed(2) : 'N/A'}</td>
+                            <td><a href="${row['URL']}" target="_blank">${row['URL'] ? 'View' : 'N/A'}</a></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (error) {
+        console.error('Error fetching supplier recommendations:', error);
+        document.getElementById('result').innerHTML = `<p class="text-danger">An error occurred while fetching supplier recommendations. Please try again later.</p>`;
+    }
+});
+
+
 
     </script>
 </body>

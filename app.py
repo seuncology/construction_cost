@@ -870,30 +870,63 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
         logging.error(f"Error in recommending suppliers: {e}")
         return []
 
-# API route for supplier recommendations
+# # API route for supplier recommendations
+# @app.route('/recommend_suppliers', methods=['POST'])
+# def api_recommend_suppliers():
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+
+#     try:
+#         data = request.form
+#         product_keyword = data.get("product_keyword")
+#         preferred_location = data.get("preferred_location")
+#         limit = int(data.get("limit", 10))
+#         offset = int(data.get("offset", 0))
+
+#         if not product_keyword:
+#             return jsonify({"error": "Product keyword is required"}), 400
+
+#         results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
+#         return jsonify({"results": results})
+#     except Exception as e:
+#         logging.error(f"Error in supplier recommendation: {e}")
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         conn.close()
+
 @app.route('/recommend_suppliers', methods=['POST'])
-def api_recommend_suppliers():
-    conn = connect_db()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
-
+def recommend_suppliers():
     try:
-        data = request.form
-        product_keyword = data.get("product_keyword")
-        preferred_location = data.get("preferred_location")
-        limit = int(data.get("limit", 10))
-        offset = int(data.get("offset", 0))
+        product_keyword = request.form.get('product_keyword')
+        preferred_location = request.form.get('preferred_location')
+        limit = int(request.form.get('limit', 0))  # Default to 0 (no limit)
 
-        if not product_keyword:
-            return jsonify({"error": "Product keyword is required"}), 400
+        # Query the database for matching suppliers
+        query = db.session.query(Supplier).filter(Supplier.product.ilike(f"%{product_keyword}%"))
+        if preferred_location:
+            query = query.filter(Supplier.location.ilike(f"%{preferred_location}%"))
+        
+        results = query.limit(limit).all() if limit > 0 else query.all()
 
-        results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
-        return jsonify({"results": results})
+        # Prepare the output
+        response = {
+            "results": [
+                {
+                    "Supplier": supplier.name,
+                    "Location": supplier.location,
+                    "Price": supplier.price,
+                    "Matched Product": supplier.product,
+                    "Reliability Score": supplier.reliability_score,
+                    "URL": supplier.url,
+                }
+                for supplier in results
+            ]
+        }
+        return jsonify(response)
     except Exception as e:
-        logging.error(f"Error in supplier recommendation: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
+        logging.error(f"Error fetching supplier recommendations: {e}")
+        return jsonify({"error": "An error occurred while fetching recommendations."}), 500
 
 
 # Function to recommend suppliers
