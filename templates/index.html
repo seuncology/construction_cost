@@ -3,501 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cost Estimator and Supplier Recommendation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <title>Product Cost Estimator & Supplier Recommendations</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body {
-            background-color: #f4f7fa;
-            font-family: 'Arial', sans-serif;
-            padding: 30px;
-        }
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1, h2 {
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .form-section {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 40px;
-        }
-        .form-label {
-            font-weight: 600;
-        }
-        .form-select, .form-control {
-            height: 45px;
-            font-size: 16px;
-        }
-        .btn {
-            padding: 10px 20px;
-        }
-        .result-table th, .result-table td {
-            text-align: center;
-        }
-        .result-table {
-            margin-top: 20px;
-        }
-        .row-actions {
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="text-center">Cost Estimator and Supplier Recommendation</h1>
-
-        <!-- Cost Estimator Section -->
-        <div class="form-section">
-            <h2>Cost Estimator</h2>
-            <form id="costEstimatorForm">
-                <div id="estimator">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Product</label>
-                            <select name="product_0" class="form-select">
-                                <option value="" disabled selected>Select a product</option>
-                                <option value="Cement">Cement</option>
-                                <option value="Sand">Sand</option>
-                                <option value="Gravel">Gravel</option>
-                                <option value="Aggregates">Aggregates</option>
-                                <option value="Concrete mix">Concrete mix</option>
-                                <option value="Reinforcement bars">Reinforcement bars</option>
-                                <option value="Steel">Steel</option>
-                                <option value="Structural steel">Structural steel</option>
-                                <option value="Hollow blocks">Hollow blocks</option>
-                                <option value="Bricks">Bricks</option>
-                                <option value="Metal sheets">Metal sheets</option>
-                                <option value="Tiles">Tiles</option>
-                                <option value="Roofing materials">Roofing materials</option>
-                                <option value="Ceramic">Ceramic</option>
-                                <option value="Porcelain">Porcelain</option>
-                                <option value="Stone">Stone</option>
-                                <option value="Flooring tiles">Flooring tiles</option>
-                                <option value="PVC">PVC</option>
-                                <option value="HDPE">HDPE</option>
-                                <option value="GI">GI</option>
-                                <option value="Pipes">Pipes</option>
-                                <option value="Electrical Cables">Electrical Cables</option>
-                                <option value="Electrical wires">Electrical wires</option>
-                                <option value="Toilets">Toilets</option>
-                                <option value="Basins">Basins</option>
-                                <option value="Sanitary fixtures">Sanitary fixtures</option>
-                                <option value="Aluminum doors">Aluminum doors</option>
-                                <option value="Wooden doors">Wooden doors</option>
-                                <option value="Waterproofing chemicals">Waterproofing chemicals</option>
-                                <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
-                                <option value="Insulation materials">Insulation materials</option>
-                                <option value="Skirting materials">Skirting materials</option>
-                                <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
-                                <option value="Switches and sockets">Switches and sockets</option>
-                                <option value="Binding wire">Binding wire</option>
-                                <option value="Adhesives and sealants">Adhesives and sealants</option>
-                                <option value="Hinges and locks">Hinges and locks</option>
-                                <option value="Screws and fasteners">Screws and fasteners</option>
-                                <option value="Paving stones">Paving stones</option>
-                                <option value="Topsoil">Topsoil</option>
-                                <option value="Wall putty">Wall putty</option>
-                                <option value="Ceiling boards">Ceiling boards</option>
-                                <option value="Plywood">Plywood</option>
-                                <option value="Timber">Timber</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" name="quantity_0" class="form-control" min="1" placeholder="Enter quantity">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-success add me-2">Add Row</button>
-                            <button type="button" class="btn btn-danger remove">Remove</button>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Calculate Costs</button>
-            </form>
-        </div>
-
-        <!-- Supplier Recommendation Section -->
-        <div class="form-section">
-            <h2>Supplier Recommendation</h2>
-            <form id="supplierRecommendationForm">
-                <div class="mb-3">
-                    <label class="form-label">Product Keyword</label>
-                    <input type="text" name="product_keyword" class="form-control" placeholder="Enter product keyword">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Preferred Location</label>
-                    <input type="text" name="preferred_location" class="form-control" placeholder="Enter preferred location">
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Get Recommendations</button>
-            </form>
-        </div>
-
-        <!-- Result Display Section -->
-        <div id="result" class="mt-5"></div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Handle dynamic row management
-            document.addEventListener('click', (event) => {
-                if (event.target.classList.contains('add')) {
-                    const row = event.target.closest('.row');
-                    const clone = row.cloneNode(true);
-                    const index = document.querySelectorAll('#estimator .row').length;
-
-                    clone.querySelector('select').name = `product_${index}`;
-                    clone.querySelector('input').name = `quantity_${index}`;
-                    clone.querySelector('input').value = '';
-
-                    document.getElementById('estimator').appendChild(clone);
-                } else if (event.target.classList.contains('remove')) {
-                    if (document.querySelectorAll('#estimator .row').length > 1) {
-                        event.target.closest('.row').remove();
-                    } else {
-                        alert('At least one row must remain.');
-                    }
-                }
-            });
-
-            // Handle cost estimator submission
-            document.getElementById('costEstimatorForm').addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(event.target);
-                try {
-                    const response = await fetch('/calculate_costs', {
-                        method: 'POST',
-                        body: formData,
-                    });
-                    if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
-                    const result = await response.json();
-                    displayResult('Cost Estimator Result', result.breakdown, result.total_cost);
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                }
-            });
-
-            // Handle supplier recommendation submission
-            document.getElementById('supplierRecommendationForm').addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(event.target);
-                try {
-                    const response = await fetch('/recommend_suppliers', {
-                        method: 'POST',
-                        body: formData,
-                    });
-                    if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
-                    const result = await response.json();
-                    displayResult('Supplier Recommendations', result.results);
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                }
-            });
-
-            function displayResult(title, data, totalCost = null) {
-                const resultContainer = document.getElementById('result');
-                let tableContent = '';
-                data.forEach((row) => {
-                    tableContent += `<tr>${Object.values(row).map((value) => `<td>${value || 'N/A'}</td>`).join('')}</tr>`;
-                });
-                resultContainer.innerHTML = ` 
-                    <h4>${title}</h4>
-                    ${total
-                    totalCost ? `<p><strong>Total Cost: </strong>${totalCost}</p>` : ''}
-                    <table class="table table-bordered result-table">
-                        <thead>
-                            <tr>
-                                ${Object.keys(data[0]).map((key) => `<th>${key}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableContent}
-                        </tbody>
-                    </table>
-                `;
-            }
-        });
-    </script>
-</body>
-</html>
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cost Estimator & Supplier Recommendation</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
-        }
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-        .section-header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
+            margin-top: 50px;
         }
         .form-group {
             margin-bottom: 15px;
         }
+        .results {
+            margin-top: 30px;
+        }
         .result-table {
-            margin-top: 20px;
             width: 100%;
+            margin-bottom: 30px;
         }
         .result-table th, .result-table td {
+            padding: 8px;
             text-align: left;
-            padding: 10px;
         }
-        .result-table th {
-            background-color: #f2f2f2;
+        .error {
+            color: red;
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1 class="section-header">Cost Estimator & Supplier Recommendation</h1>
+        <h1 class="text-center">Product Cost Estimator and Supplier Recommendations</h1>
 
-        <!-- Cost Estimator Section -->
-        <section id="cost-estimator">
-            <h2>Cost Estimator</h2>
-            <form id="cost-estimate-form" class="mb-4">
-                <div id="product-list">
-                    <div class="form-group row">
-                        <label class="col-sm-2 col-form-label" for="product_1">Product:</label>
-                        <div class="col-sm-4">
-                            <select class="form-control" id="product_1" name="product_1">
-                                <option value="Cement">Cement</option>
-                                <option value="Sand">Sand</option>
-                                <option value="Gravel">Gravel</option>
-                                <option value="Aggregates">Aggregates</option>
-                                <option value="Concrete mix">Concrete mix</option>
-                                <option value="Reinforcement bars">Reinforcement bars</option>
-                                <option value="Steel">Steel</option>
-                                <option value="Structural steel">Structural steel</option>
-                                <option value="Hollow blocks">Hollow blocks</option>
-                                <option value="Bricks">Bricks</option>
-                                <option value="Metal sheets">Metal sheets</option>
-                                <option value="Tiles">Tiles</option>
-                                <option value="Roofing materials">Roofing materials</option>
-                                <option value="Ceramic">Ceramic</option>
-                                <option value="Porcelain">Porcelain</option>
-                                <option value="Stone">Stone</option>
-                                <option value="Flooring tiles">Flooring tiles</option>
-                                <option value="PVC">PVC</option>
-                                <option value="HDPE">HDPE</option>
-                                <option value="GI">GI</option>
-                                <option value="Pipes">Pipes</option>
-                                <option value="Electrical Cables">Electrical Cables</option>
-                                <option value="Electrical wires">Electrical wires</option>
-                                <option value="Toilets">Toilets</option>
-                                <option value="Basins">Basins</option>
-                                <option value="Sanitary fixtures">Sanitary fixtures</option>
-                                <option value="Aluminum doors">Aluminum doors</option>
-                                <option value="Wooden doors">Wooden doors</option>
-                                <option value="Waterproofing chemicals">Waterproofing chemicals</option>
-                                <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
-                                <option value="Insulation materials">Insulation materials</option>
-                                <option value="Skirting materials">Skirting materials</option>
-                                <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
-                                <option value="Switches and sockets">Switches and sockets</option>
-                                <option value="Binding wire">Binding wire</option>
-                                <option value="Adhesives and sealants">Adhesives and sealants</option>
-                                <option value="Hinges and locks">Hinges and locks</option>
-                                <option value="Screws and fasteners">Screws and fasteners</option>
-                                <option value="Paving stones">Paving stones</option>
-                                <option value="Topsoil">Topsoil</option>
-                                <option value="Wall putty">Wall putty</option>
-                                <option value="Ceiling boards">Ceiling boards</option>
-                                <option value="Plywood">Plywood</option>
-                                <option value="Timber">Timber</option>
-                            </select>
-                        </div>
-                        <label class="col-sm-2 col-form-label" for="quantity_1">Quantity:</label>
-                        <div class="col-sm-4">
-                            <input type="number" class="form-control" id="quantity_1" name="quantity_1" value="1" min="1">
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-success" onclick="addProductRow()">Add Another Product</button>
-                <button type="submit" class="btn btn-primary mt-3">Calculate Costs</button>
-            </form>
-            <div id="cost-results"></div>
-        </section>
-
-        <!-- Supplier Recommendation Section -->
-        <section id="supplier-recommendation">
-            <h2>Supplier Recommendation</h2>
-            <form id="supplier-form" class="mb-4">
-                <div class="form-group row">
-                    <label for="product_keyword" class="col-sm-2 col-form-label">Product Keyword:</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control" id="product_keyword" name="product_keyword" required>
-                    </div>
-                    <label for="preferred_location" class="col-sm-2 col-form-label">Location:</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control" id="preferred_location" name="preferred_location">
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="result_limit" class="col-sm-2 col-form-label">Limit Results:</label>
-                    <div class="col-sm-4">
-                        <input type="number" class="form-control" id="result_limit" name="limit" value="10" min="1">
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary mt-3">Get Suppliers</button>
-            </form>
-            <div id="supplier-results"></div>
-        </section>
-
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script>
-        // Add new product row for cost estimator
-        let productRowCount = 1;
-        function addProductRow() {
-            productRowCount++;
-            const rowHTML = `
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="product_${productRowCount}">Product:</label>
-                    <div class="col-sm-4">
-                        <select class="form-control" id="product_${productRowCount}" name="product_${productRowCount}">
-                            <option value="product1">Product 1</option>
-                            <option value="product2">Product 2</option>
-                            <option value="product3">Product 3</option>
+        <!-- Product cost estimation form -->
+        <form id="costEstimationForm">
+            <div id="products-container">
+                <div class="product-entry">
+                    <div class="form-group">
+                        <label for="product_1">Product Name</label>
+                        <select class="form-control product" name="product_1" required>
+                            <option value="" disabled selected>Select a Product</option>
+                            <option value="Cement">Cement</option>
+                            <option value="Sand">Sand</option>
+                            <option value="Gravel">Gravel</option>
+                            <option value="Aggregates">Aggregates</option>
+                            <option value="Concrete mix">Concrete mix</option>
+                            <option value="Reinforcement bars">Reinforcement bars</option>
+                            <option value="Steel">Steel</option>
+                            <option value="Structural steel">Structural steel</option>
+                            <option value="Hollow blocks">Hollow blocks</option>
+                            <option value="Bricks">Bricks</option>
+                            <option value="Metal sheets">Metal sheets</option>
+                            <option value="Tiles">Tiles</option>
+                            <option value="Roofing materials">Roofing materials</option>
+                            <option value="Ceramic">Ceramic</option>
+                            <option value="Porcelain">Porcelain</option>
+                            <option value="Stone">Stone</option>
+                            <option value="Flooring tiles">Flooring tiles</option>
+                            <option value="PVC">PVC</option>
+                            <option value="HDPE">HDPE</option>
+                            <option value="GI">GI</option>
+                            <option value="Pipes">Pipes</option>
+                            <option value="Electrical Cables">Electrical Cables</option>
+                            <option value="Electrical wires">Electrical wires</option>
+                            <option value="Toilets">Toilets</option>
+                            <option value="Basins">Basins</option>
+                            <option value="Sanitary fixtures">Sanitary fixtures</option>
+                            <option value="Aluminum doors">Aluminum doors</option>
+                            <option value="Wooden doors">Wooden doors</option>
+                            <option value="Waterproofing chemicals">Waterproofing chemicals</option>
+                            <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
+                            <option value="Insulation materials">Insulation materials</option>
+                            <option value="Skirting materials">Skirting materials</option>
+                            <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
+                            <option value="Switches and sockets">Switches and sockets</option>
+                            <option value="Binding wire">Binding wire</option>
+                            <option value="Adhesives and sealants">Adhesives and sealants</option>
+                            <option value="Hinges and locks">Hinges and locks</option>
+                            <option value="Screws and fasteners">Screws and fasteners</option>
+                            <option value="Paving stones">Paving stones</option>
+                            <option value="Topsoil">Topsoil</option>
+                            <option value="Wall putty">Wall putty</option>
+                            <option value="Ceiling boards">Ceiling boards</option>
+                            <option value="Plywood">Plywood</option>
+                            <option value="Timber">Timber</option>
                         </select>
                     </div>
-                    <label class="col-sm-2 col-form-label" for="quantity_${productRowCount}">Quantity:</label>
-                    <div class="col-sm-4">
-                        <input type="number" class="form-control" id="quantity_${productRowCount}" name="quantity_${productRowCount}" value="1" min="1">
+                    <div class="form-group">
+                        <label for="quantity_1">Quantity</label>
+                        <input type="number" class="form-control quantity" name="quantity_1" required>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-success" onclick="addProduct()">Add Another Product</button>
+            <button type="button" class="btn btn-primary" onclick="submitCostEstimation()">Calculate Costs</button>
+        </form>
+
+        <!-- Display results for cost estimation -->
+        <div class="results">
+            <h3>Total Cost: <span id="totalCost">N/A</span></h3>
+            <table class="table table-bordered result-table" id="costBreakdown">
+                <thead>
+                    <tr>
+                        <th>Product (Matched)</th>
+                        <th>Keyword</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Cost</th>
+                        <th>Supplier</th>
+                        <th>Location</th>
+                        <th>Reliability Score</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Supplier recommendation form -->
+        <form id="supplierRecommendationForm">
+            <div class="form-group">
+                <label for="product_keyword">Product Keyword</label>
+                <input type="text" class="form-control" id="product_keyword" name="product_keyword" required>
+            </div>
+            <div class="form-group">
+                <label for="preferred_location">Preferred Location</label>
+                <input type="text" class="form-control" id="preferred_location" name="preferred_location">
+            </div>
+            <div class="form-group">
+                <label for="limit">Results Limit</label>
+                <input type="number" class="form-control" id="limit" name="limit" value="10" min="1">
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="submitSupplierRecommendation()">Recommend Suppliers</button>
+        </form>
+
+        <!-- Display supplier recommendations -->
+        <div class="results">
+            <h3>Supplier Recommendations</h3>
+            <table class="table table-bordered result-table" id="supplierResults">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Matched Product</th>
+                        <th>Reliability Score</th>
+                        <th>URL</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Function to add another product in the form
+        function addProduct() {
+            const productIndex = $('.product-entry').length + 1;
+            const newProductEntry = `
+                <div class="product-entry">
+                    <div class="form-group">
+                        <label for="product_${productIndex}">Product Name</label>
+                        <select class="form-control product" name="product_${productIndex}" required>
+                            <option value="" disabled selected>Select a Product</option>
+                            <option value="Cement">Cement</option>
+                            <option value="Sand">Sand</option>
+                            <option value="Gravel">Gravel</option>
+                            <option value="Aggregates">Aggregates</option>
+                            <option value="Concrete mix">Concrete mix</option>
+                            <option value="Reinforcement bars">Reinforcement bars</option>
+                            <option value="Steel">Steel</option>
+                            <option value="Structural steel">Structural steel</option>
+                            <option value="Hollow blocks">Hollow blocks</option>
+                            <option value="Bricks">Bricks</option>
+                            <option value="Metal sheets">Metal sheets</option>
+                            <option value="Tiles">Tiles</option>
+                            <option value="Roofing materials">Roofing materials</option>
+                            <option value="Ceramic">Ceramic</option>
+                            <option value="Porcelain">Porcelain</option>
+                            <option value="Stone">Stone</option>
+                            <option value="Flooring tiles">Flooring tiles</option>
+                            <option value="PVC">PVC</option>
+                            <option value="HDPE">HDPE</option>
+                            <option value="GI">GI</option>
+                            <option value="Pipes">Pipes</option>
+                            <option value="Electrical Cables">Electrical Cables</option>
+                            <option value="Electrical wires">Electrical wires</option>
+                            <option value="Toilets">Toilets</option>
+                            <option value="Basins">Basins</option>
+                            <option value="Sanitary fixtures">Sanitary fixtures</option>
+                            <option value="Aluminum doors">Aluminum doors</option>
+                            <option value="Wooden doors">Wooden doors</option>
+                            <option value="Waterproofing chemicals">Waterproofing chemicals</option>
+                            <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
+                            <option value="Insulation materials">Insulation materials</option>
+                            <option value="Skirting materials">Skirting materials</option>
+                            <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
+                            <option value="Switches and sockets">Switches and sockets</option>
+                            <option value="Binding wire">Binding wire</option>
+                            <option value="Adhesives and sealants">Adhesives and sealants</option>
+                            <option value="Hinges and locks">Hinges and locks</option>
+                            <option value="Screws and fasteners">Screws and fasteners</option>
+                            <option value="Paving stones">Paving stones</option>
+                            <option value="Topsoil">Topsoil</option>
+                            <option value="Wall putty">Wall putty</option>
+                            <option value="Ceiling boards">Ceiling boards</option>
+                            <option value="Plywood">Plywood</option>
+                            <option value="Timber">Timber</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity_${productIndex}">Quantity</label>
+                        <input type="number" class="form-control quantity" name="quantity_${productIndex}" required>
                     </div>
                 </div>
             `;
-            $('#product-list').append(rowHTML);
+            $('#products-container').append(newProductEntry);
         }
 
-        // Handle form submission for cost estimator
-        $('#cost-estimate-form').submit(function(event) {
-            event.preventDefault();
-            const productList = [];
-            for (let i = 1; i <= productRowCount; i++) {
-                const product = $(`#product_${i}`).val();
-                const quantity = $(`#quantity_${i}`).val();
-                productList.push({ product, quantity });
-            }
+        // Function to submit cost estimation form and get result
+        function submitCostEstimation() {
+            const products = [];
+            const quantities = [];
+            
+            $('.product').each(function() {
+                products.push($(this).val());
+            });
 
-            $.ajax({
-                url: '/calculate_costs',
-                method: 'POST',
-                data: productList,
-                success: function(response) {
-                    const resultDiv = $('#cost-results');
-                    resultDiv.empty();
-                    if (response.total_cost) {
-                        resultDiv.append(`<h4>Total Cost: ${response.total_cost}</h4>`);
+            $('.quantity').each(function() {
+                quantities.push($(this).val());
+            });
+
+            if (products.length && quantities.length) {
+                $.ajax({
+                    url: '/calculate_costs',
+                    type: 'POST',
+                    data: { products: products, quantities: quantities },
+                    success: function(response) {
+                        if (response.error) {
+                            alert("Error: " + response.error);
+                        } else {
+                            const breakdown = response.breakdown;
+                            const totalCost = response.total_cost;
+                            let tableRows = '';
+
+                            breakdown.forEach(item => {
+                                tableRows += `
+                                    <tr>
+                                        <td>${item['Product (Matched)']}</td>
+                                        <td>${item.Keyword}</td>
+                                        <td>${item.Quantity}</td>
+                                        <td>${item['Unit Price']}</td>
+                                        <td>${item['Total Cost']}</td>
+                                        <td>${item.Supplier}</td>
+                                        <td>${item.Location}</td>
+                                        <td>${item['Reliability Score']}</td>
+                                    </tr>
+                                `;
+                            });
+
+                            $('#costBreakdown tbody').html(tableRows);
+                            $('#totalCost').text(totalCost);
+                        }
+                    },
+                    error: function() {
+                        alert("An error occurred while calculating costs.");
                     }
-                    let tableContent = '';
-                    response.breakdown.forEach(item => {
-                        tableContent += `
-                            <tr>
-                                <td>${item["Product (Matched)"]}</td>
-                                <td>${item.Keyword}</td>
-                                <td>${item.Quantity}</td>
-                                <td>${item["Unit Price"]}</td>
-                                <td>${item["Total Cost"]}</td>
-                                <td>${item.Supplier}</td>
-                                <td>${item.Location}</td>
-                                <td>${item["Reliability Score"]}</td>
-                            </tr>
-                        `;
-                    });
-                    resultDiv.append(`
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Product (Matched)</th>
-                                    <th>Keyword</th>
-                                    <th>Quantity</th>
-                                    <th>Unit Price</th>
-                                    <th>Total Cost</th>
-                                    <th>Supplier</th>
-                                    <th>Location</th>
-                                    <th>Reliability Score</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableContent}
-                            </tbody>
-                        </table>
-                    `);
-                }
-            });
-        });
+                });
+            }
+        }
 
-        // Handle form submission for supplier recommendation
-        $('#supplier-form').submit(function(event) {
-            event.preventDefault();
-            const productKeyword = $('#product_keyword').val();
-            const preferredLocation = $('#preferred_location').val();
-            const limit = $('#result_limit').val();
+        // Function to submit supplier recommendation form and get results
+        function submitSupplierRecommendation() {
+            const productKeyword = document.getElementById('product_keyword').value;
+            const preferredLocation = document.getElementById('preferred_location').value;
+            const limit = document.getElementById('limit').value;
 
-            $.ajax({
-                url: '/recommend_suppliers',
-                method: 'POST',
-                data: {
-                    product_keyword: productKeyword,
-                    preferred_location: preferredLocation,
-                    limit: limit
-                },
-                success: function(response) {
-                    const resultDiv = $('#supplier-results');
-                    resultDiv.empty();
-                    let tableContent = '';
-                    response.results.forEach(item => {
-                        tableContent += `
-                            <tr>
-                                <td>${item.Supplier}</td>
-                                <td>${item.Location}</td>
-                                <td>${item.Price}</td>
-                                <td>${item["Matched Product"]}</td>
-                                <td>${item["Reliability Score"]}</td>
-                                <td><a href="${item.URL}" target="_blank">View</a></td>
-                            </tr>
-                        `;
-                    });
-                    resultDiv.append(`
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Supplier</th>
-                                    <th>Location</th>
-                                    <th>Price</th>
-                                    <th>Matched Product</th>
-                                    <th>Reliability Score</th>
-                                    <th>URL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableContent}
-                            </tbody>
-                        </table>
-                    `);
-                }
-            });
-        });
+            if (productKeyword) {
+                $.ajax({
+                    url: '/recommend_suppliers',
+                    type: 'POST',
+                    data: {
+                        product_keyword: productKeyword,
+                        preferred_location: preferredLocation,
+                        limit: limit
+                    },
+                    success: function(response) {
+                        if (response.error) {
+                            alert("Error: " + response.error);
+                        } else {
+                            const suppliers = response.results;
+                            let supplierRows = '';
+
+                            suppliers.forEach(supplier => {
+                                supplierRows += `
+                                    <tr>
+                                        <td>${supplier.Supplier}</td>
+                                        <td>${supplier.Location}</td>
+                                        <td>${supplier.Price}</td>
+                                        <td>${supplier['Matched Product']}</td>
+                                        <td>${supplier['Reliability Score']}</td>
+                                        <td><a href="${supplier.URL}" target="_blank">View</a></td>
+                                    </tr>
+                                `;
+                            });
+
+                            $('#supplierResults tbody').html(supplierRows);
+                        }
+                    },
+                    error: function() {
+                        alert("An error occurred while recommending suppliers.");
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
