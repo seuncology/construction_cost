@@ -36,11 +36,6 @@ def ensure_reliability_score_column(conn):
 
 # Function to calculate Reliability Score
 def compute_reliability_score(price, product_matches):
-    """
-    Compute the reliability score based on price and the number of product matches.
-    - Lower price results in higher reliability.
-    - More product matches result in higher reliability.
-    """
     score = (1 / (price + 1)) * 10  # Higher price should lower reliability score
     score += product_matches * 0.5  # More product matches improve reliability
     return round(score, 2)
@@ -90,9 +85,7 @@ def calculate_costs(conn, product_list):
             data = cursor.fetchone()
 
             if data:
-                # Compute the reliability score based on price and matches
                 reliability_score = compute_reliability_score(data[1], 5)  # Example: 5 product matches
-
                 cost = data[1] * quantity
                 total_cost += cost
                 breakdown.append({
@@ -106,7 +99,6 @@ def calculate_costs(conn, product_list):
                     "Reliability Score": reliability_score
                 })
 
-                # Store results in the database with computed reliability score
                 cursor.execute("""
                     INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location, Reliability_Score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?);
@@ -176,9 +168,7 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
         data = cursor.fetchall()
 
         for row in data:
-            # Compute the reliability score based on price and matches
             reliability_score = compute_reliability_score(row[2], 5)  # Example: 5 product matches
-
             results.append({
                 "Supplier": row[0],
                 "Location": row[1],
@@ -220,24 +210,6 @@ def api_recommend_suppliers():
 @app.route('/')
 def home():
     return render_template('index.html')
-
-# API route to get available products
-@app.route('/get_products', methods=['GET'])
-def get_products():
-    conn = connect_db()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
-
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT Product FROM fb_jiji_merged_tb")
-        products = [row[0] for row in cursor.fetchall()]
-        return jsonify(products)
-    except Exception as e:
-        logging.error(f"Error fetching products: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
 
 # Run the app
 if __name__ == '__main__':
