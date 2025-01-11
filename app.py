@@ -1262,22 +1262,18 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
         return []
     
 # Supplier recommendation function using SQLite
-@app.route('/get_supplier_recommendations', methods=['POST'])
-def get_supplier_recommendations():
+def get_supplier_recommendations(product_keyword='', preferred_location='', limit=10):
     try:
-        data = request.get_json()
-        product_keyword = data.get('product_keyword', '')
-        preferred_location = data.get('preferred_location', '')
-        limit = data.get('limit', 10)
-
         conn = connect_db()
         if not conn:
-            return jsonify({"error": "Database connection failed."}), 500
+            return {"error": "Database connection failed."}
 
         cursor = conn.cursor()
 
-        # Build the query dynamically
-        query = "SELECT name, location, price, product, reliability_score, url FROM fb_jiji_merged_tb WHERE product LIKE ?"
+        query = """
+        SELECT product, price, location, url, name, average_price, listings_count, reliability_score 
+        FROM fb_jiji_merged_tb WHERE product LIKE ?
+        """
         params = ["%" + product_keyword + "%"]
 
         if preferred_location:
@@ -1290,27 +1286,28 @@ def get_supplier_recommendations():
         cursor.execute(query, params)
         results = cursor.fetchall()
 
-        # Prepare the output
         response = {
             "results": [
                 {
-                    "Supplier": row[0],
-                    "Location": row[1],
-                    "Price": row[2],
-                    "Matched Product": row[3],
-                    "Reliability Score": row[4],
-                    "URL": row[5],
+                    "Product": row[0],
+                    "Price": row[1], 
+                    "Location": row[2],
+                    "URL": row[3],
+                    "Seller Name": row[4],
+                    "Average Price": row[5],
+                    "Listings Count": row[6],
+                    "Reliability Score": row[7]
                 }
                 for row in results
             ]
         }
 
         conn.close()
-        return jsonify(response)
+        return response
 
     except Exception as e:
         logging.error("Error fetching supplier recommendations: " + str(e))
-        return jsonify({"error": "An error occurred while fetching recommendations."}), 500
+        return {"error": "An error occurred while fetching recommendations."}
 
 # Render the home page
 @app.route('/')
