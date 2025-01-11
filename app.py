@@ -853,6 +853,41 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
     return results
 
 
+# # API route for supplier recommendations
+# @app.route('/recommend_suppliers', methods=['POST'])
+# def api_recommend_suppliers():
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+
+#     try:
+#         data = request.form
+#         product_keyword = data.get("product_keyword")
+#         preferred_location = data.get("preferred_location")
+#         limit = int(data.get("limit", 10))
+#         offset = int(data.get("offset", 0))
+
+#         if not product_keyword:
+#             return jsonify({"error": "Product keyword is required"}), 400
+
+#         results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
+#         return jsonify({"results": results})
+#     except Exception as e:
+#         logging.error(f"Error in supplier recommendation: {e}")
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         conn.close()
+
+# # Render the home page
+# @app.route('/')
+# def home():
+#     return render_template('index.html')
+
+# # Run the app
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+
 # API route for supplier recommendations
 @app.route('/recommend_suppliers', methods=['POST'])
 def api_recommend_suppliers():
@@ -885,4 +920,4 @@ def home():
 
 # Run the app
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)w
