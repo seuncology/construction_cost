@@ -20,29 +20,6 @@ def connect_db():
         logging.error("Database connection failed: " + str(e))
         return None
 
-# Ensure Reliability_Score column exists
-def ensure_reliability_score_column(conn):
-    try:
-        cursor = conn.cursor()
-        cursor.execute(""" 
-            ALTER TABLE fb_jiji_merged_tb 
-            ADD COLUMN Reliability_Score REAL DEFAULT 0.0;
-        """)
-        conn.commit()
-    except sqlite3.Error as e:
-        if "duplicate column name" in str(e).lower():
-            pass  # Column already exists
-        else:
-            logging.error(f"Error ensuring Reliability_Score column: {e}")
-
-# Function to calculate Reliability Score
-def compute_reliability_score(price, listings_count):
-    if listings_count <= 0:
-        return 0  # Handle division by zero
-    score = (1 / (price + 1)) * 10  # Higher price should lower reliability score
-    score += (1 / listings_count) * 5  # More listings improve reliability
-    return round(score, 2)
-
 # Function to calculate costs
 def calculate_costs(conn, product_list):
     cursor = conn.cursor()
@@ -61,7 +38,6 @@ def calculate_costs(conn, product_list):
             Supplier TEXT,
             Location TEXT,
             URL TEXT,
-            Reliability_Score REAL,
             UNIQUE(Product_Matched, Keyword, Supplier) ON CONFLICT REPLACE
         );
     """)
@@ -80,7 +56,7 @@ def calculate_costs(conn, product_list):
 
         try:
             cursor.execute(""" 
-                SELECT Product, MIN(Price) AS Best_Price, Location, URL, Seller_name, Average_Price, Listings_Count
+                SELECT Product, MIN(Price) AS Best_Price, Location, URL, Seller_name
                 FROM fb_jiji_merged_tb
                 WHERE LOWER(Product) LIKE LOWER(?)
                 GROUP BY Product
@@ -90,7 +66,6 @@ def calculate_costs(conn, product_list):
             data = cursor.fetchone()
 
             if data:
-                reliability_score = compute_reliability_score(data[1], data[6])  # Example: listings_count
                 cost = data[1] * quantity
                 total_cost += cost
                 breakdown.append({
@@ -102,13 +77,12 @@ def calculate_costs(conn, product_list):
                     "Supplier": data[4],
                     "Location": data[2],
                     "URL": data[3],
-                    "Reliability Score": reliability_score
                 })
 
                 cursor.execute(""" 
-                    INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location, URL, Reliability_Score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-                """, (data[0], product_keyword, quantity, data[1], cost, data[4], data[2], data[3], reliability_score))
+                    INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location, URL)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                """, (data[0], product_keyword, quantity, data[1], cost, data[4], data[2], data[3]))
             else:
                 breakdown.append({
                     "Product (Matched)": "Not Found",
@@ -119,7 +93,6 @@ def calculate_costs(conn, product_list):
                     "Supplier": "N/A",
                     "Location": "N/A",
                     "URL": "N/A",
-                    "Reliability Score": "N/A"
                 })
         except Exception as e:
             logging.error(f"Error in cost calculation: {e}")
@@ -151,28 +124,6 @@ def api_calculate_costs():
     finally:
         conn.close()
 
-@app.before_first_request
-def create_tables():
-    conn = connect_db()
-    if conn:
-        with conn:
-            cursor = conn.cursor()
-            cursor.execute(""" 
-                CREATE TABLE IF NOT EXISTS suppliers (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Product TEXT NOT NULL,
-                    Price REAL NOT NULL,
-                    Location TEXT NOT NULL,
-                    URL TEXT,
-                    Seller_name TEXT NOT NULL,
-                    Average_Price REAL,
-                    Listings_Count INTEGER,
-                    Reliability_Score REAL
-                );
-            """)
-            ensure_reliability_score_column(conn)
-        conn.close()
-
 # Route to Recommend Suppliers
 @app.route('/recommend_suppliers', methods=['POST'])
 def recommend_suppliers():
@@ -191,9 +142,7 @@ def recommend_suppliers():
             Price, 
             Location, 
             URL, 
-            Seller_name, 
-            Average_Price, 
-            Listings_Count 
+            Seller_name 
         FROM suppliers 
         WHERE Product LIKE ?
         """
@@ -215,7 +164,6 @@ def recommend_suppliers():
                 "Location": row[2],
                 "Price": row[1],
                 "Matched Product": row[0],
-                "Reliability Score": row[6],
                 "URL": row[3],
             }
             for row in data
@@ -227,87 +175,6 @@ def recommend_suppliers():
     except Exception as e:
         logging.error(f"Error in recommending suppliers: {e}")
         return jsonify({"error": "An error occurred while fetching recommendations."}), 500
-
-# Route to Add Supplier
-@app.route('/add_supplier', methods=['POST'])
-def add_supplier():
-    try:
-        data = request.form
-        product = data.get('product')
-        price = float(data.get('price', 0))  # Ensure price is float
-        location = data.get('location')
-        url = data.get('url')
-        seller_name = data.get('seller_name')
-        average_price = float(data.get('average_price', 0))  # Ensure average price is float
-        listings_count = int(data.get('listings_count', 0))  # Ensure listings count is integer
-        reliability_score = float(data.get('reliability_score', 0))  # Ensure reliability score is float
-
-        conn = connect_db()
-        cursor = conn.cursor()
-
-        query = """ 
-        INSERT INTO suppliers (Product, Price, Location, URL, Seller_name, Average_Price, Listings_Count, Reliability_Score)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """
-        cursor.execute(query, (product, price, location, url, seller_name, average_price, listings_count, reliability_score))
-        conn.commit()
-        conn.close()
-
-        return jsonify({"message": "Supplier added successfully!"})
-
-    except Exception as e:
-        logging.error(f"Error in adding supplier: {e}")
-        return jsonify({"error": "An error occurred while adding the supplier."}), 500
-
-# Route to Update Supplier
-@app.route('/update_supplier/<int:id>', methods=['POST'])
-def update_supplier(id):
-    try:
-        data = request.form
-        product = data.get('product')
-        price = float(data.get('price', 0))  # Ensure price is float
-        location = data.get('location')
-        url = data.get('url')
-        seller_name = data.get('seller_name')
-        average_price = float(data.get('average_price', 0))  # Ensure average price is float
-        listings_count = int(data.get('listings_count', 0))  # Ensure listings count is integer
-        reliability_score = float(data.get('reliability_score', 0))  # Ensure reliability score is float
-
-        conn = connect_db()
-        cursor = conn.cursor()
-
-        query = """ 
-        UPDATE suppliers 
-        SET Product = ?, Price = ?, Location = ?, URL = ?, Seller_name = ?, Average_Price = ?, Listings_Count = ?, Reliability_Score = ?
-        WHERE id = ?
-        """
-        cursor.execute(query, (product, price, location, url, seller_name, average_price, listings_count, reliability_score, id))
-        conn.commit()
-        conn.close()
-
-        return jsonify({"message": "Supplier updated successfully!"})
-
-    except Exception as e:
-        logging.error(f"Error in updating supplier: {e}")
-        return jsonify({"error": "An error occurred while updating the supplier."}), 500
-
-# Route to Delete Supplier
-@app.route('/delete_supplier/<int:id>', methods=['DELETE'])
-def delete_supplier(id):
-    try:
-        conn = connect_db()
-        cursor = conn.cursor()
-
-        query = "DELETE FROM suppliers WHERE id = ?"
-        cursor.execute(query, (id,))
-        conn.commit()
-        conn.close()
-
-        return jsonify({"message": "Supplier deleted successfully!"})
-
-    except Exception as e:
-        logging.error(f"Error in deleting supplier: {e}")
-        return jsonify({"error": "An error occurred while deleting the supplier."}), 500
 
 # Render the home page
 @app.route('/')
