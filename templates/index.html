@@ -1,16 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marketplace Tool</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        #loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <h2>Cost and Supplier Recommendations</h2>
 
+        <!-- Loading Indicator -->
+        <div id="loading">Loading...</div>
+
         <!-- Cost Estimator Section -->
         <h4>Cost Estimator</h4>
-  
         <form id="costEstimatorForm" action="/calculate_costs" method="post">
             <div id="estimator">
                 <div class="row mb-3">
@@ -91,12 +106,9 @@
             <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Enter limit (e.g., 5)">
             <button type="submit" class="btn btn-primary mt-3">Submit</button>
         </form>
-        
-        
 
         <div id="result" class="mt-5"></div>
     </div>
-  
     <script>
         // Handle dynamic row addition and removal
         document.addEventListener('click', function(event) {

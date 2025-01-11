@@ -80,7 +80,7 @@ def calculate_costs(conn, product_list):
 
         try:
             cursor.execute(""" 
-                SELECT Product, MIN(Price) AS Best_Price, Location, URL, Seller_name, Average_Price, Listings_Count, Reliability_Score
+                SELECT Product, MIN(Price) AS Best_Price, Location, URL, Seller_name, Average_Price, Listings_Count
                 FROM fb_jiji_merged_tb
                 WHERE LOWER(Product) LIKE LOWER(?)
                 GROUP BY Product
@@ -193,8 +193,7 @@ def recommend_suppliers():
             URL, 
             Seller_name, 
             Average_Price, 
-            Listings_Count, 
-            Reliability_Score 
+            Listings_Count 
         FROM suppliers 
         WHERE Product LIKE ?
         """
@@ -216,7 +215,7 @@ def recommend_suppliers():
                 "Location": row[2],
                 "Price": row[1],
                 "Matched Product": row[0],
-                "Reliability Score": row[7],
+                "Reliability Score": row[6],
                 "URL": row[3],
             }
             for row in data
