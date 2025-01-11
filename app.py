@@ -899,18 +899,22 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
 def recommend_suppliers():
     try:
         product_keyword = request.form.get('product_keyword')
-        preferred_location = request.form.get('preferred_location')
-        limit = int(request.form.get('limit', 0))  # Default to 0 (no limit)
+        preferred_location = request.form.get('preferred_location', None)
+        limit = int(request.form.get('limit', 0))  # Default to no limit
 
-        # Query the database for matching suppliers
+        if not product_keyword:
+            raise ValueError("Product keyword is required.")
+
         query = db.session.query(Supplier).filter(Supplier.product.ilike(f"%{product_keyword}%"))
         if preferred_location:
             query = query.filter(Supplier.location.ilike(f"%{preferred_location}%"))
-        
+
         results = query.limit(limit).all() if limit > 0 else query.all()
 
-        # Prepare the output
-        response = {
+        if not results:
+            return jsonify({"results": []})
+
+        return jsonify({
             "results": [
                 {
                     "Supplier": supplier.name,
@@ -919,14 +923,14 @@ def recommend_suppliers():
                     "Matched Product": supplier.product,
                     "Reliability Score": supplier.reliability_score,
                     "URL": supplier.url,
-                }
-                for supplier in results
+                } for supplier in results
             ]
-        }
-        return jsonify(response)
+        })
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
-        logging.error(f"Error fetching supplier recommendations: {e}")
-        return jsonify({"error": "An error occurred while fetching recommendations."}), 500
+        logging.error(f"Unexpected error: {e}")
+        return jsonify({"error": "An internal server error occurred."}), 500
 
 
 # Function to recommend suppliers
