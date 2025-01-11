@@ -89,7 +89,7 @@
             <label for="limit" class="mt-2">Limit Results:</label>
             <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Enter limit (e.g., 5)">
             <button type="submit" class="btn btn-primary mt-3">Submit</button>
-        </form>
+        </form>        
         
         
 
@@ -308,7 +308,7 @@ document.querySelector('form[action="/recommend_suppliers"]').addEventListener('
 ***/
 
 // Handle supplier recommendations form submission
-document.querySelector('form[action="/recommend_suppliers"]').addEventListener('submit', async (event) => {
+document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
 
@@ -356,6 +356,7 @@ document.querySelector('form[action="/recommend_suppliers"]').addEventListener('
                 </tbody>
             </table>
         `;
+
     } catch (error) {
         console.error('Error fetching supplier recommendations:', error);
         document.getElementById('result').innerHTML = `<p class="text-danger">An error occurred while fetching supplier recommendations. Please try again later.</p>`;

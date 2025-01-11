@@ -1196,6 +1196,168 @@ def api_calculate_costs():
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+        
+@app.before_first_request
+def create_tables():
+    with app.app_context():
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS suppliers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Product TEXT NOT NULL,
+                Price REAL NOT NULL,
+                Location TEXT NOT NULL,
+                URL TEXT,
+                Seller_name TEXT NOT NULL,
+                Average_Price REAL,
+                Listings_Count INTEGER,
+                Reliability_Score REAL
+            );
+        """)
+        conn.commit()
+
+
+# Route to Recommend Suppliers
+@app.route('/recommend_suppliers', methods=['POST'])
+def recommend_suppliers():
+    try:
+        data = request.form
+        product_keyword = data.get('product_keyword', '')
+        preferred_location = data.get('preferred_location', '')
+        limit = int(data.get('limit', 10))  # Default limit is 10 if not specified
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        query = """
+        SELECT 
+            Product, 
+            Price, 
+            Location, 
+            URL, 
+            Seller_name, 
+            Average_Price, 
+            Listings_Count, 
+            Reliability_Score 
+        FROM suppliers 
+        WHERE Product LIKE ?
+        """
+        params = [f"%{product_keyword}%"]
+
+        if preferred_location:
+            query += " AND Location LIKE ?"
+            params.append(f"%{preferred_location}%")
+
+        query += " LIMIT ?"
+        params.append(limit)
+
+        cursor.execute(query, params)
+        data = cursor.fetchall()
+
+        results = [
+            {
+                "Supplier": row[4],
+                "Location": row[2],
+                "Price": row[1],
+                "Matched Product": row[0],
+                "Reliability Score": row[7],
+                "URL": row[3],
+            }
+            for row in data
+        ]
+
+        conn.close()
+        return jsonify({"results": results})
+
+    except Exception as e:
+        logging.error(f"Error in recommending suppliers: {e}")
+        return jsonify({"error": "An error occurred while fetching recommendations."}), 500
+
+# Route to Add Supplier
+@app.route('/add_supplier', methods=['POST'])
+def add_supplier():
+    try:
+        data = request.form
+        product = data.get('product')
+        price = data.get('price')
+        location = data.get('location')
+        url = data.get('url')
+        seller_name = data.get('seller_name')
+        average_price = data.get('average_price')
+        listings_count = data.get('listings_count')
+        reliability_score = data.get('reliability_score')
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        query = """
+        INSERT INTO suppliers (Product, Price, Location, URL, Seller_name, Average_Price, Listings_Count, Reliability_Score)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        cursor.execute(query, (product, price, location, url, seller_name, average_price, listings_count, reliability_score))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Supplier added successfully!"})
+
+    except Exception as e:
+        logging.error(f"Error in adding supplier: {e}")
+        return jsonify({"error": "An error occurred while adding the supplier."}), 500
+
+# Route to Update Supplier
+@app.route('/update_supplier/<int:id>', methods=['POST'])
+def update_supplier(id):
+    try:
+        data = request.form
+        product = data.get('product')
+        price = data.get('price')
+        location = data.get('location')
+        url = data.get('url')
+        seller_name = data.get('seller_name')
+        average_price = data.get('average_price')
+        listings_count = data.get('listings_count')
+        reliability_score = data.get('reliability_score')
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        query = """
+        UPDATE suppliers 
+        SET Product = ?, Price = ?, Location = ?, URL = ?, Seller_name = ?, Average_Price = ?, Listings_Count = ?, Reliability_Score = ?
+        WHERE id = ?
+        """
+        cursor.execute(query, (product, price, location, url, seller_name, average_price, listings_count, reliability_score, id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Supplier updated successfully!"})
+
+    except Exception as e:
+        logging.error(f"Error in updating supplier: {e}")
+        return jsonify({"error": "An error occurred while updating the supplier."}), 500
+
+# Route to Delete Supplier
+@app.route('/delete_supplier/<int:id>', methods=['DELETE'])
+def delete_supplier(id):
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        query = "DELETE FROM suppliers WHERE id = ?"
+        cursor.execute(query, (id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Supplier deleted successfully!"})
+
+    except Exception as e:
+        logging.error(f"Error in deleting supplier: {e}")
+        return jsonify({"error": "An error occurred while deleting the supplier."}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 
 # # Function to recommend suppliers
 # def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset):
@@ -1309,123 +1471,123 @@ def api_calculate_costs():
 #         return {"error": "An error occurred while fetching recommendations."}
 
 
-# Function to recommend suppliers
-def recommend_suppliers(conn, product_keyword, preferred_location, limit):
-    try:
-        cursor = conn.cursor()
+# # Function to recommend suppliers
+# def recommend_suppliers(conn, product_keyword, preferred_location, limit):
+#     try:
+#         cursor = conn.cursor()
 
-        # SQL query to retrieve supplier recommendations
-        query = """
-        SELECT 
-            Product, 
-            Price, 
-            Location, 
-            URL, 
-            Seller_name, 
-            Average_Price, 
-            Listings_Count, 
-            Reliability_Score 
-        FROM suppliers 
-        WHERE Product LIKE ?
-        """
-        params = [f"%{product_keyword}%"]
+#         # SQL query to retrieve supplier recommendations
+#         query = """
+#         SELECT 
+#             Product, 
+#             Price, 
+#             Location, 
+#             URL, 
+#             Seller_name, 
+#             Average_Price, 
+#             Listings_Count, 
+#             Reliability_Score 
+#         FROM suppliers 
+#         WHERE Product LIKE ?
+#         """
+#         params = [f"%{product_keyword}%"]
 
-        # Add location filter if specified
-        if preferred_location:
-            query += " AND Location LIKE ?"
-            params.append(f"%{preferred_location}%")
+#         # Add location filter if specified
+#         if preferred_location:
+#             query += " AND Location LIKE ?"
+#             params.append(f"%{preferred_location}%")
 
-        # Add limit
-        query += " LIMIT ?"
-        params.append(limit)
+#         # Add limit
+#         query += " LIMIT ?"
+#         params.append(limit)
 
-        # Execute the query
-        cursor.execute(query, params)
-        data = cursor.fetchall()
+#         # Execute the query
+#         cursor.execute(query, params)
+#         data = cursor.fetchall()
 
-        # Map results to the expected output format
-        results = []
-        for row in data:
-            seller_name = row[4]
-            location = row[2]
-            price = row[1]
-            product = row[0]
-            reliability_score = row[7] if row[7] is not None else 0.0  # Default reliability score if None
-            url = row[3]
+#         # Map results to the expected output format
+#         results = []
+#         for row in data:
+#             seller_name = row[4]
+#             location = row[2]
+#             price = row[1]
+#             product = row[0]
+#             reliability_score = row[7] if row[7] is not None else 0.0  # Default reliability score if None
+#             url = row[3]
 
-            results.append({
-                "Supplier": seller_name,            # Name of the supplier 
-                "Location": location,               # Supplier location
-                "Price": price,                     # Current price of the product                
-                "Matched Product": product,         # Include the product name 
-                "Reliability Score": reliability_score,  # Reliability score of the supplier
-                "URL": url,                        # Supplier/product URL
-            })
+#             results.append({
+#                 "Supplier": seller_name,            # Name of the supplier 
+#                 "Location": location,               # Supplier location
+#                 "Price": price,                     # Current price of the product                
+#                 "Matched Product": product,         # Include the product name 
+#                 "Reliability Score": reliability_score,  # Reliability score of the supplier
+#                 "URL": url,                        # Supplier/product URL
+#             })
 
-        return results
+#         return results
 
-    except sqlite3.DatabaseError as db_err:
-        logging.error(f"Database error: {db_err}")
-        return {"error": "A database error occurred."}
-    except Exception as e:
-        logging.error(f"Error in recommending suppliers: {e}")
-        return {"error": "An unexpected error occurred."}
+#     except sqlite3.DatabaseError as db_err:
+#         logging.error(f"Database error: {db_err}")
+#         return {"error": "A database error occurred."}
+#     except Exception as e:
+#         logging.error(f"Error in recommending suppliers: {e}")
+#         return {"error": "An unexpected error occurred."}
 
-# Supplier recommendation function using SQLite
-def get_supplier_recommendations(product_keyword='', preferred_location='', limit=10):
-    try:
-        conn = connect_db()
-        if not conn:
-            return {"error": "Database connection failed."}
+# # Supplier recommendation function using SQLite
+# def get_supplier_recommendations(product_keyword='', preferred_location='', limit=10):
+#     try:
+#         conn = connect_db()
+#         if not conn:
+#             return {"error": "Database connection failed."}
 
-        cursor = conn.cursor()
+#         cursor = conn.cursor()
 
-        query = """
-        SELECT product, price, location, url, name, average_price, listings_count, reliability_score 
-        FROM fb_jiji_merged_tb WHERE product LIKE ?
-        """
-        params = ["%" + product_keyword + "%"]
+#         query = """
+#         SELECT product, price, location, url, name, average_price, listings_count, reliability_score 
+#         FROM fb_jiji_merged_tb WHERE product LIKE ?
+#         """
+#         params = ["%" + product_keyword + "%"]
 
-        if preferred_location:
-            query += " AND location LIKE ?"
-            params.append("%" + preferred_location + "%")
+#         if preferred_location:
+#             query += " AND location LIKE ?"
+#             params.append("%" + preferred_location + "%")
 
-        query += " LIMIT ?"
-        params.append(limit)
+#         query += " LIMIT ?"
+#         params.append(limit)
 
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+#         cursor.execute(query, params)
+#         results = cursor.fetchall()
 
-        response = {
-            "results": [
-                {
-                    "Supplier": row[4],
-                    "Location": row[2], 
-                    "Price": row[1],
-                    "Matched Product": row[0],
-                    "Reliability Score": row[7],
-                    "URL": row[3],
-                }
-                for row in results
-            ]
-        }
+#         response = {
+#             "results": [
+#                 {
+#                     "Supplier": row[4],
+#                     "Location": row[2], 
+#                     "Price": row[1],
+#                     "Matched Product": row[0],
+#                     "Reliability Score": row[7],
+#                     "URL": row[3],
+#                 }
+#                 for row in results
+#             ]
+#         }
 
-        conn.close()
-        return response
+#         conn.close()
+#         return response
 
-    except sqlite3.DatabaseError as db_err:
-        logging.error(f"Database error: {db_err}")
-        return {"error": "A database error occurred."}
-    except Exception as e:
-        logging.error("Error fetching supplier recommendations: " + str(e))
-        return {"error": "An unexpected error occurred."}
+#     except sqlite3.DatabaseError as db_err:
+#         logging.error(f"Database error: {db_err}")
+#         return {"error": "A database error occurred."}
+#     except Exception as e:
+#         logging.error("Error fetching supplier recommendations: " + str(e))
+#         return {"error": "An unexpected error occurred."}
 
 
-# Render the home page
-@app.route('/')
-def home():
-    return render_template('index.html')
+# # Render the home page
+# @app.route('/')
+# def home():
+#     return render_template('index.html')
 
-# Run the app
-if __name__ == '__main__':
-    app.run(debug=True)
+# # Run the app
+# if __name__ == '__main__':
+#     app.run(debug=True)
