@@ -1243,16 +1243,14 @@ def recommend_suppliers(conn, product_keyword, preferred_location, limit, offset
             average_price = row[5]
             listings_count = row[6]
             reliability_score = row[7] if row[7] is not None else 0.0  # Default reliability score if None
-
+            
             results.append({
-                "Matched Product": product,           # Include the product name
-                "Price": price,                       # Current price of the product
-                "Location": location,                 # Supplier location
-                "URL": url,                           # Supplier/product URL
-                "Supplier": seller_name,              # Name of the supplier
-                "Average Price": average_price,       # Average price of the product
-                "Listings Count": listings_count,     # Number of product listings
-                "Reliability Score": reliability_score  # Reliability score of the supplier
+                "Supplier": seller_name,            # Name of the supplier 
+                "Location": location,               # Supplier location
+                "Price": price,                     # Current price of the product                
+                "Matched Product": product,         # Include the product name 
+                "Reliability Score": reliability_score,  # Reliability score of the supplier
+                "URL": url,                        # Supplier/product URL
             })
 
         return results
@@ -1289,14 +1287,13 @@ def get_supplier_recommendations(product_keyword='', preferred_location='', limi
         response = {
             "results": [
                 {
-                    "Product": row[0],
-                    "Price": row[1], 
-                    "Location": row[2],
+                    "Supplier": row[4],
+                    "Location": row[2], 
+                    "Price": row[1],
+                    "Matched Product": row[0],
+                    "Reliability Score": row[7],
                     "URL": row[3],
-                    "Seller Name": row[4],
-                    "Average Price": row[5],
-                    "Listings Count": row[6],
-                    "Reliability Score": row[7]
+
                 }
                 for row in results
             ]
