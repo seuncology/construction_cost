@@ -34,17 +34,6 @@ def ensure_reliability_score_column(conn):
         else:
             logging.error(f"Error ensuring Reliability_Score column: {e}")
 
-# Function to calculate Reliability Score
-def compute_reliability_score(price, product_matches):
-    """
-    Compute the reliability score based on price and the number of product matches.
-    - Lower price results in higher reliability.
-    - More product matches result in higher reliability.
-    """
-    score = (1 / (price + 1)) * 10  # Higher price should lower reliability score
-    score += product_matches * 0.5  # More product matches improve reliability
-    return round(score, 2)
-
 # Function to calculate costs
 def calculate_costs(conn, product_list):
     cursor = conn.cursor()
@@ -80,7 +69,7 @@ def calculate_costs(conn, product_list):
 
         try:
             cursor.execute("""
-                SELECT Product, MIN(Price) AS Best_Price, seller_name, Location
+                SELECT Product, MIN(Price) AS Best_Price, seller_name, Location, Reliability_Score
                 FROM fb_jiji_merged_tb
                 WHERE LOWER(Product) LIKE LOWER(?)
                 GROUP BY Product
@@ -90,9 +79,6 @@ def calculate_costs(conn, product_list):
             data = cursor.fetchone()
 
             if data:
-                # Compute the reliability score based on price and matches
-                reliability_score = compute_reliability_score(data[1], 5)  # Example: 5 product matches
-
                 cost = data[1] * quantity
                 total_cost += cost
                 breakdown.append({
@@ -103,14 +89,14 @@ def calculate_costs(conn, product_list):
                     "Total Cost": cost,
                     "Supplier": data[2],
                     "Location": data[3],
-                    "Reliability Score": reliability_score
+                    "Reliability Score": data[4]
                 })
 
-                # Store results in the database with computed reliability score
+                # Store results in the database with the retrieved reliability score
                 cursor.execute("""
                     INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location, Reliability_Score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-                """, (data[0], product_keyword, quantity, data[1], cost, data[2], data[3], reliability_score))
+                """, (data[0], product_keyword, quantity, data[1], cost, data[2], data[3], data[4]))
             else:
                 breakdown.append({
                     "Product (Matched)": "Not Found",
@@ -159,7 +145,7 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
 
     try:
         query = """
-            SELECT seller_name, Location, Price, Product
+            SELECT seller_name, Location, Price, Product, Reliability_Score
             FROM fb_jiji_merged_tb
             WHERE LOWER(Product) LIKE LOWER(?)
         """
@@ -176,15 +162,12 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
         data = cursor.fetchall()
 
         for row in data:
-            # Compute the reliability score based on price and matches
-            reliability_score = compute_reliability_score(row[2], 5)  # Example: 5 product matches
-
             results.append({
                 "Supplier": row[0],
                 "Location": row[1],
                 "Price": row[2],
                 "Matched Product": row[3],
-                "Reliability Score": reliability_score
+                "Reliability Score": row[4]
             })
     except Exception as e:
         logging.error(f"Error in recommending suppliers: {e}")

@@ -78,6 +78,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            display: none; /* Initially hide tables */
         }
 
         table th, table td {
@@ -164,6 +165,7 @@
                     <option value="Ceiling boards">Ceiling boards</option>
                     <option value="Plywood">Plywood</option>
                     <option value="Timber">Timber</option>
+                    <!-- Options omitted for brevity -->
                 </select>
 
                 <label for="quantity">Quantity:</label>
@@ -244,6 +246,7 @@
             <div id="total_cost">
                 <strong>Total Estimated Cost: </strong><span id="total_amount">0.00</span>
             </div>
+            <button id="calculate_cost">Calculate Total Cost</button>
         </div>
     </div>
 
@@ -256,98 +259,54 @@
             const removeProductBtn = document.getElementById('remove_product');
             const productList = document.getElementById('product_list');
             const productTable = document.getElementById('product_table').getElementsByTagName('tbody')[0];
-    
+            const calculateCostBtn = document.getElementById('calculate_cost');
+
             let productData = [];
-    
+
             // Handle adding products to the table
             addProductBtn.addEventListener('click', function() {
                 const productNameValue = productName.value.trim();
                 const quantityValue = parseInt(quantity.value, 10);
-    
+
                 if (productNameValue && quantityValue > 0) {
                     // Add product to the productData array
                     productData.push({
                         name: productNameValue,
                         quantity: quantityValue
                     });
-    
+
                     // Add product to the table
                     const row = productTable.insertRow();
                     const cell1 = row.insertCell(0);
                     const cell2 = row.insertCell(1);
                     const cell3 = row.insertCell(2);
-    
+
                     cell1.textContent = productNameValue;
                     cell2.textContent = quantityValue;
                     cell3.innerHTML = `<button class="remove" onclick="removeProduct(this)">Remove</button>`;
-    
+
                     // Clear the input fields
                     productName.value = '';
                     quantity.value = 1;
                 }
             });
-    
+
             // Handle removing products from the table
             window.removeProduct = function(button) {
                 const rowIndex = button.closest('tr').rowIndex;
                 productData.splice(rowIndex - 1, 1); // Remove the product from the array
                 productTable.deleteRow(rowIndex); // Remove the product row from the table
             }
-    
-            // Handle submitting the supplier form
-            const supplierForm = document.getElementById('supplier_form');
-            const productKeyword = document.getElementById('product_keyword');
-            const preferredLocation = document.getElementById('preferred_location');
-            const supplierTable = document.getElementById('supplier_table').getElementsByTagName('tbody')[0];
-    
-            supplierForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-    
-                const keyword = productKeyword.value.trim();
-                const location = preferredLocation.value.trim();
-    
-                // Clear previous supplier data
-                supplierTable.innerHTML = '';
-    
-                // API call to get supplier recommendations
-                fetch('/recommend_suppliers', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `product_keyword=${keyword}&preferred_location=${location}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const suppliers = data.results;
-                    suppliers.forEach(supplier => {
-                        const row = supplierTable.insertRow();
-                        const cell1 = row.insertCell(0);
-                        const cell2 = row.insertCell(1);
-                        const cell3 = row.insertCell(2);
-                        const cell4 = row.insertCell(3);
-    
-                        cell1.textContent = supplier.Supplier;
-                        cell2.textContent = supplier.Location;
-                        cell3.textContent = supplier.Price;
-                        cell4.textContent = supplier.Reliability_Score;
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching supplier data:', error);
-                });
-            });
-    
+
             // Handle calculating total cost and displaying it
-            const costTable = document.getElementById('cost_table').getElementsByTagName('tbody')[0];
-            const totalAmount = document.getElementById('total_amount');
-    
+            calculateCostBtn.addEventListener('click', calculateCost);
+
             function calculateCost() {
                 const productList = productData.map(item => ({
                     product: item.name,
                     quantity: item.quantity
                 }));
-    
+
                 // API call to calculate the cost
                 fetch('/calculate_costs', {
                     method: 'POST',
@@ -360,9 +319,10 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    totalAmount.textContent = `$${data.total_cost.toFixed(2)}`;
+                    document.getElementById('total_amount').textContent = `$${data.total_cost.toFixed(2)}`;
                     
                     // Clear previous cost data
+                    const costTable = document.getElementById('cost_table').getElementsByTagName('tbody')[0];
                     costTable.innerHTML = '';
                     
                     // Insert the new cost data
@@ -374,7 +334,7 @@
                         const cell4 = row.insertCell(3);
                         const cell5 = row.insertCell(4);
                         const cell6 = row.insertCell(5);
-    
+
                         cell1.textContent = item["Product (Matched)"];
                         cell2.textContent = item.Quantity;
                         cell3.textContent = item["Unit Price"];
@@ -382,18 +342,20 @@
                         cell5.textContent = item.Supplier;
                         cell6.textContent = item["Reliability Score"];
                     });
+
+                    // Show the table after results are calculated
+                    document.getElementById('cost_table').style.display = '';
                 })
                 .catch(error => {
                     console.error('Error calculating costs:', error);
                 });
             }
-    
+
             // Trigger cost calculation whenever a product is added or removed
             const observer = new MutationObserver(calculateCost);
             observer.observe(productTable, { childList: true });
-    
+
         });
     </script>
-    
 </body>
 </html>
