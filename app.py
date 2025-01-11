@@ -440,7 +440,192 @@
 # if __name__ == '__main__':
 #     app.run(debug=True)
 
-from tabulate import tabulate
+# from tabulate import tabulate
+# from flask import Flask, request, jsonify, render_template
+# import sqlite3
+
+# app = Flask(__name__)
+
+# # Database connection function
+# def connect_db(db_name="fb_jiji_merged.db"):
+#     try:
+#         conn = sqlite3.connect(db_name)
+#         return conn
+#     except sqlite3.Error as e:
+#         print(f"Error connecting to database: {e}")
+#         return None
+
+# # Validate product list against the database
+# def validate_product_list(conn, product_list):
+#     cursor = conn.cursor()
+#     invalid_products = []
+#     for product in product_list:
+#         cursor.execute("SELECT 1 FROM fb_jiji_merged_tb WHERE LOWER(Product) LIKE LOWER(?) LIMIT 1;", (f"%{product}%",))
+#         if not cursor.fetchone():
+#             invalid_products.append(product)
+#     return invalid_products
+
+# # Function to calculate costs
+# def calculate_costs(conn, product_list):
+#     cursor = conn.cursor()
+#     total_cost = 0
+#     breakdown = []
+
+#     # Ensure the table exists
+#     cursor.execute("""
+#         CREATE TABLE IF NOT EXISTS calculated_costs (
+#             id INTEGER PRIMARY KEY AUTOINCREMENT,
+#             Product_Matched TEXT NOT NULL,
+#             Keyword TEXT NOT NULL,
+#             Quantity INTEGER NOT NULL,
+#             Unit_Price REAL NOT NULL,
+#             Total_Cost REAL NOT NULL,
+#             Supplier TEXT,
+#             Location TEXT,
+#             UNIQUE(Product_Matched, Keyword, Supplier) ON CONFLICT REPLACE
+#         );
+#     """)
+
+#     for item in product_list:
+#         product_keyword = item.get('product')
+#         quantity = int(item.get('quantity', 0))
+
+#         if not product_keyword or quantity <= 0:
+#             continue
+
+#         cursor.execute("""
+#             SELECT MIN(Price) AS cheapest_price, seller_name, Location, Product 
+#             FROM fb_jiji_merged_tb 
+#             WHERE LOWER(Product) LIKE LOWER(?)
+#             GROUP BY Product 
+#             ORDER BY cheapest_price ASC 
+#             LIMIT 1;
+#         """, (f"%{product_keyword}%",))
+#         data = cursor.fetchone()
+
+#         if data:
+#             cost = data[0] * quantity
+#             total_cost += cost
+#             breakdown.append({
+#                 "Product (Matched)": data[3],
+#                 "Keyword": product_keyword,
+#                 "Quantity": quantity,
+#                 "Unit Price": data[0],
+#                 "Total Cost": cost,
+#                 "Supplier": data[1],
+#                 "Location": data[2]
+#             })
+#             cursor.execute("""
+#                 INSERT INTO calculated_costs (Product_Matched, Keyword, Quantity, Unit_Price, Total_Cost, Supplier, Location)
+#                 VALUES (?, ?, ?, ?, ?, ?, ?);
+#             """, (data[3], product_keyword, quantity, data[0], cost, data[1], data[2]))
+#         else:
+#             breakdown.append({
+#                 "Product (Matched)": "Not Found",
+#                 "Keyword": product_keyword,
+#                 "Quantity": quantity,
+#                 "Unit Price": "N/A",
+#                 "Total Cost": "N/A",
+#                 "Supplier": "N/A",
+#                 "Location": "N/A"
+#             })
+
+#     conn.commit()
+#     return {"total_cost": total_cost, "breakdown": breakdown}
+
+# # API route for cost estimation
+# @app.route('/calculate_costs', methods=['POST'])
+# def api_calculate_costs():
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+
+#     try:
+#         product_list = []
+#         for key in request.form:
+#             if key.startswith('product_') and request.form[key]:
+#                 index = key.split('_')[1]
+#                 product = request.form[key]
+#                 quantity = request.form.get(f'quantity_{index}', 0)
+#                 product_list.append({"product": product, "quantity": quantity})
+
+#         invalid_products = validate_product_list(conn, [item['product'] for item in product_list])
+#         if invalid_products:
+#             return jsonify({
+#                 "error": "Some products are invalid",
+#                 "invalid_products": invalid_products
+#             }), 400
+
+#         results = calculate_costs(conn, product_list)
+#         return jsonify(results)
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         conn.close()
+
+# # Function to recommend suppliers
+# def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10, offset=0):
+#     cursor = conn.cursor()
+#     results = []
+
+#     query = """
+#         SELECT seller_name, Location, Price, Product, URL 
+#         FROM fb_jiji_merged_tb 
+#         WHERE LOWER(Product) LIKE LOWER(?)
+#     """
+#     params = [f"%{product_keyword}%"]
+
+#     if preferred_location:
+#         query += " AND LOWER(Location) LIKE LOWER(?)"
+#         params.append(f"%{preferred_location}%")
+
+#     query += " ORDER BY Price ASC LIMIT ? OFFSET ?;"
+#     params.extend([limit, offset])
+#     cursor.execute(query, params)
+#     data = cursor.fetchall()
+
+#     for row in data:
+#         results.append({
+#             "Supplier": row[0],
+#             "Location": row[1],
+#             "Price": row[2],
+#             "Matched_Product": row[3],
+#             "URL": row[4]
+#         })
+
+#     return results
+
+# @app.route('/recommend_suppliers', methods=['POST'])
+# def api_recommend_suppliers():
+#     conn = connect_db()
+#     if not conn:
+#         return jsonify({"error": "Database connection failed"}), 500
+
+#     try:
+#         data = request.form
+#         product_keyword = data.get("product_keyword")
+#         preferred_location = data.get("preferred_location")
+#         limit = int(data.get("limit", 10))
+#         offset = int(data.get("offset", 0))
+
+#         if not product_keyword:
+#             return jsonify({"error": "Product keyword is required"}), 400
+
+#         results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
+#         return jsonify({"results": results})
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         conn.close()
+
+# @app.route('/')
+# def home():
+#     return render_template('index.html')
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+
 from flask import Flask, request, jsonify, render_template
 import sqlite3
 
@@ -452,18 +637,8 @@ def connect_db(db_name="fb_jiji_merged.db"):
         conn = sqlite3.connect(db_name)
         return conn
     except sqlite3.Error as e:
-        print(f"Error connecting to database: {e}")
+        print(f"Error: {e}")
         return None
-
-# Validate product list against the database
-def validate_product_list(conn, product_list):
-    cursor = conn.cursor()
-    invalid_products = []
-    for product in product_list:
-        cursor.execute("SELECT 1 FROM fb_jiji_merged_tb WHERE LOWER(Product) LIKE LOWER(?) LIMIT 1;", (f"%{product}%",))
-        if not cursor.fetchone():
-            invalid_products.append(product)
-    return invalid_products
 
 # Function to calculate costs
 def calculate_costs(conn, product_list):
@@ -471,18 +646,15 @@ def calculate_costs(conn, product_list):
     total_cost = 0
     breakdown = []
 
-    # Ensure the table exists
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS calculated_costs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            Product_Matched TEXT NOT NULL,
-            Keyword TEXT NOT NULL,
-            Quantity INTEGER NOT NULL,
-            Unit_Price REAL NOT NULL,
-            Total_Cost REAL NOT NULL,
+            Product_Matched TEXT,
+            Keyword TEXT,
+            Quantity INTEGER,
+            Unit_Price REAL,
+            Total_Cost REAL,
             Supplier TEXT,
-            Location TEXT,
-            UNIQUE(Product_Matched, Keyword, Supplier) ON CONFLICT REPLACE
+            Location TEXT
         );
     """)
 
@@ -493,17 +665,13 @@ def calculate_costs(conn, product_list):
         if not product_keyword or quantity <= 0:
             continue
 
-        cursor.execute("""
-            SELECT MIN(Price) AS cheapest_price, seller_name, Location, Product 
-            FROM fb_jiji_merged_tb 
-            WHERE LOWER(Product) LIKE LOWER(?)
-            GROUP BY Product 
-            ORDER BY cheapest_price ASC 
-            LIMIT 1;
-        """, (f"%{product_keyword}%",))
+        cursor.execute(
+            "SELECT MIN(Price) AS cheapest_price, seller_name, Location, Product "
+            "FROM fb_jiji_merged_tb WHERE Product LIKE ?;",
+            (f"%{product_keyword}%",)
+        )
         data = cursor.fetchone()
-
-        if data:
+        if data and data[0]:
             cost = data[0] * quantity
             total_cost += cost
             breakdown.append({
@@ -521,7 +689,7 @@ def calculate_costs(conn, product_list):
             """, (data[3], product_keyword, quantity, data[0], cost, data[1], data[2]))
         else:
             breakdown.append({
-                "Product (Matched)": "Not Found",
+                "Product (Matched)": "N/A",
                 "Keyword": product_keyword,
                 "Quantity": quantity,
                 "Unit Price": "N/A",
@@ -549,13 +717,6 @@ def api_calculate_costs():
                 quantity = request.form.get(f'quantity_{index}', 0)
                 product_list.append({"product": product, "quantity": quantity})
 
-        invalid_products = validate_product_list(conn, [item['product'] for item in product_list])
-        if invalid_products:
-            return jsonify({
-                "error": "Some products are invalid",
-                "invalid_products": invalid_products
-            }), 400
-
         results = calculate_costs(conn, product_list)
         return jsonify(results)
     except Exception as e:
@@ -564,23 +725,18 @@ def api_calculate_costs():
         conn.close()
 
 # Function to recommend suppliers
-def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10, offset=0):
+def recommend_suppliers(conn, product_keyword, preferred_location=None):
     cursor = conn.cursor()
     results = []
 
-    query = """
-        SELECT seller_name, Location, Price, Product, URL 
-        FROM fb_jiji_merged_tb 
-        WHERE LOWER(Product) LIKE LOWER(?)
-    """
+    query = "SELECT seller_name, Location, Price, Product, URL FROM fb_jiji_merged_tb WHERE Product LIKE ?"
     params = [f"%{product_keyword}%"]
 
     if preferred_location:
-        query += " AND LOWER(Location) LIKE LOWER(?)"
+        query += " AND Location LIKE ?"
         params.append(f"%{preferred_location}%")
 
-    query += " ORDER BY Price ASC LIMIT ? OFFSET ?;"
-    params.extend([limit, offset])
+    query += " ORDER BY Price ASC;"
     cursor.execute(query, params)
     data = cursor.fetchall()
 
@@ -597,21 +753,15 @@ def recommend_suppliers(conn, product_keyword, preferred_location=None, limit=10
 
 @app.route('/recommend_suppliers', methods=['POST'])
 def api_recommend_suppliers():
+    data = request.form
     conn = connect_db()
     if not conn:
         return jsonify({"error": "Database connection failed"}), 500
 
     try:
-        data = request.form
         product_keyword = data.get("product_keyword")
         preferred_location = data.get("preferred_location")
-        limit = int(data.get("limit", 10))
-        offset = int(data.get("offset", 0))
-
-        if not product_keyword:
-            return jsonify({"error": "Product keyword is required"}), 400
-
-        results = recommend_suppliers(conn, product_keyword, preferred_location, limit, offset)
+        results = recommend_suppliers(conn, product_keyword, preferred_location)
         return jsonify({"results": results})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
