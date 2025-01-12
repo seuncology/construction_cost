@@ -622,6 +622,7 @@ def recommend_suppliers():
         data = request.json
         product_keyword = data.get('product_keyword', '')
         preferred_location = data.get('preferred_location', '')
+        limit = data.get('limit', 10)  # Default limit to 10 if not provided
 
         conn = connect_db()
         cursor = conn.cursor()
@@ -641,6 +642,9 @@ def recommend_suppliers():
         if preferred_location:
             query += " AND Location LIKE ?"
             params.append(f"%{preferred_location}%")
+
+        query += " LIMIT ?"
+        params.append(limit)  # Include the limit in the query parameters
 
         cursor.execute(query, params)
         data = cursor.fetchall()

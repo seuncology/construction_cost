@@ -30,6 +30,7 @@
             <div id="estimator">
                 <div class="row mb-3">
                     <select class="form-control col-md-4" name="product_0" required>
+                        <option value="">Select Product</option>
                         <option value="Cement">Cement</option>
                         <option value="Sand">Sand</option>
                         <option value="Gravel">Gravel</option>
@@ -101,9 +102,10 @@
             <input id="productKeyword" name="product_keyword" type="text" class="form-control" required>
             <label for="preferredLocation" class="mt-2">Preferred Location (optional):</label>
             <input id="preferredLocation" name="preferred_location" type="text" class="form-control">
+            <label for="limit" class="mt-2">Limit (optional):</label>
+            <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Number of suppliers to display">
             <button type="submit" class="btn btn-primary mt-3">Submit</button>
         </form>
-
         <div id="result" class="mt-5"></div>
     </div>
     
@@ -190,59 +192,60 @@
         });
 
         // Handle supplier recommendations form submission
-        document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            document.getElementById('loading').style.display = 'block'; // Show loading indicator
+document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    document.getElementById('loading').style.display = 'block'; // Show loading indicator
 
-            const response = await fetch('/recommend_suppliers', {
-                method: 'POST',
-                body: JSON.stringify({
-                    product_keyword: formData.get('product_keyword'),
-                    preferred_location: formData.get('preferred_location'),
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+    const response = await fetch('/recommend_suppliers', {
+        method: 'POST',
+        body: JSON.stringify({
+            product_keyword: formData.get('product_keyword'),
+            preferred_location: formData.get('preferred_location'),
+            limit: formData.get('limit') || 10,  // Default to 10 if no limit is specified
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
 
-            const result = await response.json();
-            document.getElementById('loading').style.display = 'none'; // Hide loading indicator
+    const result = await response.json();
+    document.getElementById('loading').style.display = 'none'; // Hide loading indicator
 
-            if (response.ok) {
-                if (result.results && result.results.length > 0) {
-                    document.getElementById('result').innerHTML = `
-                        <h4>Recommended Suppliers</h4>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Supplier</th>
-                                    <th>Location</th>
-                                    <th>Price</th>
-                                    <th>Matched Product</th>
-                                    <th>URL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${result.results.map(row => `
-                                    <tr>
-                                        <td>${row['Supplier'] || 'N/A'}</td>
-                                        <td>${row['Location'] || 'N/A'}</td>
-                                        <td>${row['Price'] || 'N/A'}</td>
-                                        <td>${row['Matched Product'] || 'N/A'}</td>
-                                        <td><a href="${row['URL']}" target="_blank">${row['URL'] ? 'View' : 'N/A'}</a></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                } else {
-                    document.getElementById('result').innerHTML = `<p class="text-warning">No suppliers found for the given criteria.</p>`;
-                }
-            } else {
-                document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while fetching recommendations.'}</p>`;
-            }
-        });
+    if (response.ok) {
+        if (result.results && result.results.length > 0) {
+            document.getElementById('result').innerHTML = `
+                <h4>Recommended Suppliers</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Supplier</th>
+                            <th>Location</th>
+                            <th>Price</th>
+                            <th>Matched Product</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.results.map(row => `
+                            <tr>
+                                <td>${row['Supplier'] || 'N/A'}</td>
+                                <td>${row['Location'] || 'N/A'}</td>
+                                <td>${row['Price'] || 'N/A'}</td>
+                                <td>${row['Matched Product'] || 'N/A'}</td>
+                                <td><a href="${row['URL']}" target="_blank">${row['URL'] ? 'View' : 'N/A'}</a></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            document.getElementById('result').innerHTML = `<p class="text-warning">No suppliers found for the given criteria.</p>`;
+        }
+    } else {
+        document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while fetching recommendations.'}</p>`;
+    }
+});
     </script>
 </body>
 </html>
