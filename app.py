@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import sqlite3
 import logging
+import numpy as np  # Importing NumPy for statistical calculations
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -61,11 +62,12 @@ def calculate_costs(conn, items):
                 })
                 continue
 
-            # Step 3: Calculate the average price
-            average_price = sum(price for _, price, *_ in matched_products) / len(matched_products)
+            # Step 3: Calculate the median price
+            prices = [price for _, price, *_ in matched_products]
+            median_price = np.median(prices)
 
-            # Step 4: Find the product with the price closest to the average price
-            best_match = min(matched_products, key=lambda x: abs(x[1] - average_price))
+            # Step 4: Find the product with the price closest to the median price
+            best_match = min(matched_products, key=lambda x: abs(x[1] - median_price))
 
             # Step 5: Calculate total cost for the best match
             cost = best_match[1] * quantity
