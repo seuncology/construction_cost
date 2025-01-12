@@ -91,10 +91,16 @@
     </div>
 
     <script>
+        // Handle dynamic row addition and removal for Cost Estimation
         document.addEventListener('click', function(event) {
             if (event.target.classList.contains('add')) {
                 const row = event.target.parentElement;
                 const clone = row.cloneNode(true);
+                const index = document.querySelectorAll('#estimator .row').length;
+                clone.querySelector('select[name^="product_"]').name = `product_${index}`;
+                clone.querySelector('select[name^="quantity_"]').name = `quantity_${index}`;
+                clone.querySelector('select[name^="product_"]').value = ''; // Reset cloned product
+                clone.querySelector('select[name^="quantity_"]').value = ''; // Reset cloned quantity
                 document.getElementById('estimator').appendChild(clone);
             } else if (event.target.classList.contains('remove')) {
                 const row = event.target.parentElement;
@@ -105,35 +111,121 @@
                 }
             }
         });
-
-        async function submitEstimatorData() {
-            const rows = document.querySelectorAll('#estimator .row');
-            const data = Array.from(rows).map(row => {
-                const product = row.querySelector('.product').value;
-                const quantity = row.querySelector('.quantity').value;
-                return { product, quantity };
+    
+        // Handle cost estimation form submission
+        document.querySelector('#costEstimatorForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            document.getElementById('loading').style.display = 'block'; // Show loading indicator
+    
+            const items = Array.from(formData.entries()).map(([key, value]) => {
+                const index = key.split('_')[1];
+                return {
+                    product: value,
+                    quantity: formData.get(`quantity_${index}`)
+                };
             });
-
+    
             const response = await fetch('/estimate_costs', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: data })
+                body: JSON.stringify({ items }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
+    
             const result = await response.json();
-            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
-        }
-
-        async function recommendSuppliers() {
-            const productKeyword = document.getElementById('productKeyword').value;
-            const preferredLocation = document.getElementById('preferredLocation').value;
+            document.getElementById('loading').style.display = 'none'; // Hide loading indicator
+            
+            if (response.ok) {
+                document.getElementById('result').innerHTML = `
+                    <h4>Total Cost: ${result.total_cost}</h4>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product Matched</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total Cost</th>
+                                <th>Supplier</th>
+                                <th>Location</th>
+                                <th>URL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.breakdown.map(row => `
+                                <tr>
+                                    <td>${row['Product (Matched)']}</td>
+                                    <td>${row['Quantity']}</td>
+                                    <td>${row['Unit Price']}</td>
+                                    <td>${row['Total Cost']}</td>
+                                    <td>${row['Supplier']}</td>
+                                    <td>${row['Location']}</td>
+                                    <td><a href="${row['URL']}" target="_blank">View</a></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while calculating costs.'}</p>`;
+            }
+        });
+    
+        // Handle supplier recommendations form submission
+        document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            document.getElementById('loading').style.display = 'block'; // Show loading indicator
+    
             const response = await fetch('/recommend_suppliers', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_keyword: productKeyword, preferred_location: preferredLocation })
+                body: JSON.stringify({
+                    product_keyword: formData.get('product_keyword'),
+                    preferred_location: formData.get('preferred_location'),
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
+    
             const result = await response.json();
-            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
-        }
+            document.getElementById('loading').style.display = 'none'; // Hide loading indicator
+    
+            if (response.ok) {
+                if (result.results && result.results.length > 0) {
+                    document.getElementById('result').innerHTML = `
+                        <h4>Recommended Suppliers</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Location</th>
+                                    <th>Price</th>
+                                    <th>Matched Product</th>
+                                    <th>URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.results.map(row => `
+                                    <tr>
+                                        <td>${row['Supplier'] || 'N/A'}</td>
+                                        <td>${row['Location'] || 'N/A'}</td>
+                                        <td>${row['Price'] || 'N/A'}</td>
+                                        <td>${row['Matched Product'] || 'N/A'}</td>
+                                        <td><a href="${row['URL']}" target="_blank">${row['URL'] ? 'View' : 'N/A'}</a></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `<p class="text-warning">No suppliers found for the given criteria.</p>`;
+                }
+            } else {
+                document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while fetching recommendations.'}</p>`;
+            }
+        });
     </script>
 </body>
 </html>
