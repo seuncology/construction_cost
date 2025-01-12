@@ -6,6 +6,58 @@
     <title>Marketplace Tool</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Page background styling */
+        body {
+            background: linear-gradient(120deg, #f0f8ff, #e6f7ff); /* Soft gradient */
+            font-family: Arial, sans-serif;
+            color: #333; /* Text color */
+        }
+
+        /* Container styling */
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Heading styles */
+        h2 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007bff; /* Bootstrap blue */
+        }
+
+        h4 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #343a40; /* Bootstrap dark gray */
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        /* Input and select field styling */
+        select, input {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Loading indicator */
         #loading {
             display: none;
             position: fixed;
@@ -14,12 +66,16 @@
             transform: translate(-50%, -50%);
             font-size: 1.5rem;
             z-index: 1000;
+            background: #ffffff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2>Cost and Supplier Recommendations</h2>
+        <h2>Marketplace Tool</h2>
 
         <!-- Loading Indicator -->
         <div id="loading">Loading...</div>
@@ -79,7 +135,6 @@
                             <option value="Wall putty">Wall putty</option>
                             <option value="Waterproofing chemicals">Waterproofing chemicals</option>
                             <option value="Wooden doors">Wooden doors</option>                            
-                            <!-- Other options -->
                         </select>
                     </div>
                     <div class="col-md-4 col-sm-6 mb-2 mb-sm-0">
@@ -94,7 +149,6 @@
                             <option value="20">20</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
-                            <!-- Other options -->
                         </select>
                     </div>
                     <div class="col-md-4 d-flex justify-content-sm-start justify-content-center">
@@ -108,15 +162,34 @@
 
         <!-- Form for Supplier Recommendations -->
         <form id="supplierForm" class="mt-5">
-            <h4>Recommend Suppliers</h4>
-            <label for="productKeyword">Product Keyword:</label>
-            <input id="productKeyword" name="product_keyword" type="text" class="form-control" required>
-            <label for="preferredLocation" class="mt-2">Preferred Location (optional):</label>
-            <input id="preferredLocation" name="preferred_location" type="text" class="form-control">
-            <label for="limit" class="mt-2">Limit (optional):</label>
-            <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Number of suppliers to display">
-            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+            <div class="row">
+                <div class="col-12">
+                    <h4>Recommend Suppliers</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <label for="productKeyword">Product Keyword:</label>
+                    <input id="productKeyword" name="product_keyword" type="text" class="form-control" required>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <label for="preferredLocation">Preferred Location (optional):</label>
+                    <input id="preferredLocation" name="preferred_location" type="text" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label for="limit">Limit (optional):</label>
+                    <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Number of suppliers to display">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
         </form>
+        
         <div id="result" class="mt-5"></div>
     </div>
     
