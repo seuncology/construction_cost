@@ -562,27 +562,17 @@ def calculate_costs(conn, items):
 
         try:
             cursor = conn.cursor()
-            cursor.execute(""" 
-                SELECT Product, Price, Seller_name, Location, URL
-                FROM fb_jiji_merged_tb
-                WHERE LOWER(Product) LIKE LOWER(?)
-                LIMIT 1;
-            """, (f"%{product_keyword}%",))
-            data = cursor.fetchone()
 
-            if data:
-                cost = data[1] * quantity
-                total_cost += cost
-                breakdown.append({
-                    "Product (Matched)": data[0],
-                    "Quantity": quantity,
-                    "Supplier": data[2],
-                    "Total Cost": cost,
-                    "Unit Price": data[1],
-                    "Location": data[3],
-                    "URL": data[4],
-                })
-            else:
+            # Step 1: Find products that match the keyword
+            cursor.execute(""" 
+                SELECT Product, Price
+                FROM fb_jiji_merged_tb
+                WHERE LOWER(Product) LIKE LOWER(?);
+            """, (f"%{product_keyword}%",))
+            matched_products = cursor.fetchall()
+
+            # Step 2: Calculate the average price
+            if not matched_products:
                 breakdown.append({
                     "Product (Matched)": "Not Found",
                     "Quantity": quantity,
@@ -592,6 +582,25 @@ def calculate_costs(conn, items):
                     "Location": "N/A",
                     "URL": "N/A",
                 })
+                continue
+
+            average_price = sum(price for _, price in matched_products) / len(matched_products)
+
+            # Step 3: Find the product with the price closest to the average price
+            best_match = min(matched_products, key=lambda x: abs(x[1] - average_price))
+
+            # Step 4: Calculate total cost for the best match
+            cost = best_match[1] * quantity
+            total_cost += cost
+            breakdown.append({
+                "Product (Matched)": best_match[0],
+                "Quantity": quantity,
+                "Supplier": "N/A",  # You can modify this to fetch supplier info if needed
+                "Total Cost": cost,
+                "Unit Price": best_match[1],
+                "Location": "N/A",  # Optionally, you can fetch location if needed
+                "URL": "N/A",  # Optionally, you can fetch URL if needed
+            })
         except Exception as e:
             logging.error(f"Error in cost calculation: {e}")
 
