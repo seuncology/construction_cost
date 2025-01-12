@@ -28,68 +28,79 @@
         <h4>Cost Estimator</h4>
         <form id="costEstimatorForm">
             <div id="estimator">
-                <div class="row mb-3">
-                    <select class="form-control col-md-4" name="product_0" required>
-                        <option value="">Select Product</option>
-                        <option value="Cement">Cement</option>
-                        <option value="Sand">Sand</option>
-                        <option value="Gravel">Gravel</option>
-                        <option value="Aggregates">Aggregates</option>
-                        <option value="Concrete mix">Concrete mix</option>
-                        <option value="Reinforcement bars">Reinforcement bars</option>
-                        <option value="Steel">Steel</option>
-                        <option value="Structural steel">Structural steel</option>
-                        <option value="Hollow blocks">Hollow blocks</option>
-                        <option value="Bricks">Bricks</option>
-                        <option value="Metal sheets">Metal sheets</option>
-                        <option value="Tiles">Tiles</option>
-                        <option value="Roofing materials">Roofing materials</option>
-                        <option value="Ceramic">Ceramic</option>
-                        <option value="Porcelain">Porcelain</option>
-                        <option value="Stone">Stone</option>
-                        <option value="Flooring tiles">Flooring tiles</option>
-                        <option value="PVC">PVC</option>
-                        <option value="HDPE">HDPE</option>
-                        <option value="GI">GI</option>
-                        <option value="Pipes">Pipes</option>
-                        <option value="Electrical Cables">Electrical Cables</option>
-                        <option value="Electrical wires">Electrical wires</option>
-                        <option value="Toilets">Toilets</option>
-                        <option value="Basins">Basins</option>
-                        <option value="Sanitary fixtures">Sanitary fixtures</option>
-                        <option value="Aluminum doors">Aluminum doors</option>
-                        <option value="Wooden doors">Wooden doors</option>
-                        <option value="Waterproofing chemicals">Waterproofing chemicals</option>
-                        <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
-                        <option value="Insulation materials">Insulation materials</option>
-                        <option value="Skirting materials">Skirting materials</option>
-                        <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
-                        <option value="Switches and sockets">Switches and sockets</option>
-                        <option value="Binding wire">Binding wire</option>
-                        <option value="Adhesives and sealants">Adhesives and sealants</option>
-                        <option value="Hinges and locks">Hinges and locks</option>
-                        <option value="Screws and fasteners">Screws and fasteners</option>
-                        <option value="Paving stones">Paving stones</option>
-                        <option value="Topsoil">Topsoil</option>
-                        <option value="Wall putty">Wall putty</option>
-                        <option value="Ceiling boards">Ceiling boards</option>
-                        <option value="Plywood">Plywood</option>
-                        <option value="Timber">Timber</option>
-                    </select>
-                    <select class="form-control col-md-4 ml-3" name="quantity_0" required>
-                        <option value="">Select Quantity</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <button type="button" class="btn btn-success ml-3 add">Add</button>
-                    <button type="button" class="btn btn-danger ml-2 remove">Remove</button>
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-4 col-sm-6 mb-2 mb-sm-0">
+                        <select class="form-control" name="product_0" required>
+                            <option value="">Select Product</option>
+                            <option value="Adhesives and sealants">Adhesives and sealants</option>
+                            <option value="Aggregates">Aggregates</option>
+                            <option value="Aluminum doors">Aluminum doors</option>
+                            <option value="Amoured Cables">Amoured Cables</option>
+                            <option value="Basins">Basins</option>
+                            <option value="Binding wire">Binding wire</option>
+                            <option value="Bricks">Bricks</option>
+                            <option value="Ceiling boards">Ceiling boards</option>
+                            <option value="Cement">Cement</option>
+                            <option value="Ceramic">Ceramic</option>
+                            <option value="Concrete mix">Concrete mix</option>
+                            <option value="Doors">Doors</option>
+                            <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
+                            <option value="Electrical Cables">Electrical Cables</option>
+                            <option value="Electrical wires">Electrical wires</option>
+                            <option value="Flooring tiles">Flooring tiles</option>
+                            <option value="GI">GI</option>
+                            <option value="Gravel">Gravel</option>
+                            <option value="HDPE">HDPE</option>
+                            <option value="Hinges and locks">Hinges and locks</option>
+                            <option value="Hollow blocks">Hollow blocks</option>
+                            <option value="Insulation materials">Insulation materials</option>
+                            <option value="Iron">Iron</option>
+                            <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
+                            <option value="Metal sheets">Metal sheets</option>
+                            <option value="Paving stones">Paving stones</option>
+                            <option value="Pipes">Pipes</option>
+                            <option value="Porcelain">Porcelain</option>
+                            <option value="Plywood">Plywood</option>
+                            <option value="PVC">PVC</option>
+                            <option value="Reinforcement bars">Reinforcement bars</option>
+                            <option value="Roofing materials">Roofing materials</option>
+                            <option value="Sand">Sand</option>
+                            <option value="Sanitary fixtures">Sanitary fixtures</option>
+                            <option value="Screws and fasteners">Screws and fasteners</option>
+                            <option value="Skirting materials">Skirting materials</option>
+                            <option value="Steel">Steel</option>
+                            <option value="Stone">Stone</option>
+                            <option value="Structural steel">Structural steel</option>
+                            <option value="Switches and sockets">Switches and sockets</option>
+                            <option value="Tiles">Tiles</option>
+                            <option value="Timber">Timber</option>
+                            <option value="Toilets">Toilets</option>
+                            <option value="Topsoil">Topsoil</option>
+                            <option value="Wall putty">Wall putty</option>
+                            <option value="Waterproofing chemicals">Waterproofing chemicals</option>
+                            <option value="Wooden doors">Wooden doors</option>                            
+                            <!-- Other options -->
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-sm-6 mb-2 mb-sm-0">
+                        <select class="form-control" name="quantity_0" required>
+                            <option value="">Select Quantity</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <!-- Other options -->
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex justify-content-sm-start justify-content-center">
+                        <button type="button" class="btn btn-success mr-2 add">Add</button>
+                        <button type="button" class="btn btn-danger remove">Remove</button>
+                    </div>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary mt-3">Submit</button>
