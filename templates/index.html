@@ -1,125 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marketplace Tool</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        #loading {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            z-index: 1000;
-        }
-    </style>
 </head>
 <body>
     <div class="container mt-5">
         <h2>Cost and Supplier Recommendations</h2>
 
-        <!-- Loading Indicator -->
-        <div id="loading">Loading...</div>
-
         <!-- Cost Estimator Section -->
         <h4>Cost Estimator</h4>
-        <form id="costEstimatorForm" action="/calculate_costs" method="post">
-            <div id="estimator">
-                <div class="row mb-3">
-                    <select class="form-control col-md-4" name="product_0" required>
-                        <option value="">Select Product</option>
-                        <option value="Cement">Cement</option>
-                        <option value="Sand">Sand</option>
-                        <option value="Gravel">Gravel</option>
-                        <option value="Aggregates">Aggregates</option>
-                        <option value="Concrete mix">Concrete mix</option>
-                        <option value="Reinforcement bars">Reinforcement bars</option>
-                        <option value="Steel">Steel</option>
-                        <option value="Structural steel">Structural steel</option>
-                        <option value="Hollow blocks">Hollow blocks</option>
-                        <option value="Bricks">Bricks</option>
-                        <option value="Metal sheets">Metal sheets</option>
-                        <option value="Tiles">Tiles</option>
-                        <option value="Roofing materials">Roofing materials</option>
-                        <option value="Ceramic">Ceramic</option>
-                        <option value="Porcelain">Porcelain</option>
-                        <option value="Stone">Stone</option>
-                        <option value="Flooring tiles">Flooring tiles</option>
-                        <option value="PVC">PVC</option>
-                        <option value="HDPE">HDPE</option>
-                        <option value="GI">GI</option>
-                        <option value="Pipes">Pipes</option>
-                        <option value="Electrical Cables">Electrical Cables</option>
-                        <option value="Electrical wires">Electrical wires</option>
-                        <option value="Toilets">Toilets</option>
-                        <option value="Basins">Basins</option>
-                        <option value="Sanitary fixtures">Sanitary fixtures</option>
-                        <option value="Aluminum doors">Aluminum doors</option>
-                        <option value="Wooden doors">Wooden doors</option>
-                        <option value="Waterproofing chemicals">Waterproofing chemicals</option>
-                        <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
-                        <option value="Insulation materials">Insulation materials</option>
-                        <option value="Skirting materials">Skirting materials</option>
-                        <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
-                        <option value="Switches and sockets">Switches and sockets</option>
-                        <option value="Binding wire">Binding wire</option>
-                        <option value="Adhesives and sealants">Adhesives and sealants</option>
-                        <option value="Hinges and locks">Hinges and locks</option>
-                        <option value="Screws and fasteners">Screws and fasteners</option>
-                        <option value="Paving stones">Paving stones</option>
-                        <option value="Topsoil">Topsoil</option>
-                        <option value="Wall putty">Wall putty</option>
-                        <option value="Ceiling boards">Ceiling boards</option>
-                        <option value="Plywood">Plywood</option>
-                        <option value="Timber">Timber</option>
-                    </select>
-                    <select class="form-control col-md-4 ml-3" name="quantity_0" required>
-                        <option value="">Select Quantity</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <button type="button" class="btn btn-success ml-3 add">Add</button>
-                    <button type="button" class="btn btn-danger ml-2 remove">Remove</button>
-                </div>
+        <div id="estimator">
+            <div class="row mb-3">
+                <select class="form-control col-md-4 product">
+                    <option value="">Select Product</option>
+                    <option value="Cement">Cement</option>
+                    <option value="Sand">Sand</option>
+                    <option value="Gravel">Gravel</option>
+                    <option value="Aggregates">Aggregates</option>
+                    <option value="Concrete mix">Concrete mix</option>
+                    <option value="Reinforcement bars">Reinforcement bars</option>
+                    <option value="Steel">Steel</option>
+                    <option value="Structural steel">Structural steel</option>
+                    <option value="Hollow blocks">Hollow blocks</option>
+                    <option value="Bricks">Bricks</option>
+                    <option value="Metal sheets">Metal sheets</option>
+                    <option value="Tiles">Tiles</option>
+                    <option value="Roofing materials">Roofing materials</option>
+                    <option value="Ceramic">Ceramic</option>
+                    <option value="Porcelain">Porcelain</option>
+                    <option value="Stone">Stone</option>
+                    <option value="Flooring tiles">Flooring tiles</option>
+                    <option value="PVC">PVC</option>
+                    <option value="HDPE">HDPE</option>
+                    <option value="GI">GI</option>
+                    <option value="Pipes">Pipes</option>
+                    <option value="Electrical Cables">Electrical Cables</option>
+                    <option value="Electrical wires">Electrical wires</option>
+                    <option value="Toilets">Toilets</option>
+                    <option value="Basins">Basins</option>
+                    <option value="Sanitary fixtures">Sanitary fixtures</option>
+                    <option value="Aluminum doors">Aluminum doors</option>
+                    <option value="Wooden doors">Wooden doors</option>
+                    <option value="Waterproofing chemicals">Waterproofing chemicals</option>
+                    <option value="Drywall Gypsum boards">Drywall Gypsum boards</option>
+                    <option value="Insulation materials">Insulation materials</option>
+                    <option value="Skirting materials">Skirting materials</option>
+                    <option value="Lighting fixtures (LED, CFL)">Lighting fixtures (LED, CFL)</option>
+                    <option value="Switches and sockets">Switches and sockets</option>
+                    <option value="Binding wire">Binding wire</option>
+                    <option value="Adhesives and sealants">Adhesives and sealants</option>
+                    <option value="Hinges and locks">Hinges and locks</option>
+                    <option value="Screws and fasteners">Screws and fasteners</option>
+                    <option value="Paving stones">Paving stones</option>
+                    <option value="Topsoil">Topsoil</option>
+                    <option value="Wall putty">Wall putty</option>
+                    <option value="Ceiling boards">Ceiling boards</option>
+                    <option value="Plywood">Plywood</option>
+                    <option value="Timber">Timber</option>
+                </select>
+                <select class="form-control col-md-4 quantity ml-3">
+                    <option value="">Select Quantity</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <button class="btn btn-success ml-3 add">Add</button>
+                <button class="btn btn-danger ml-2 remove">Remove</button>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">Submit</button>
-        </form>
+        </div>
+        <button class="btn btn-primary mt-3" onclick="submitEstimatorData()">Submit</button>
 
         <!-- Form for Supplier Recommendations -->
-        <form id="supplierForm" class="mt-5" action="/recommend_suppliers" method="post">
+        <form id="supplierForm" class="mt-5">
             <h4>Recommend Suppliers</h4>
             <label for="productKeyword">Product Keyword:</label>
-            <input id="productKeyword" name="product_keyword" type="text" class="form-control" required>
+            <input id="productKeyword" type="text" class="form-control">
             <label for="preferredLocation" class="mt-2">Preferred Location (optional):</label>
-            <input id="preferredLocation" name="preferred_location" type="text" class="form-control">
-            <label for="limit" class="mt-2">Limit Results:</label>
-            <input id="limit" name="limit" type="number" class="form-control" min="1" placeholder="Enter limit (e.g., 5)">
-            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+            <input id="preferredLocation" type="text" class="form-control">
+            <button type="button" class="btn btn-primary mt-3" onclick="recommendSuppliers()">Submit</button>
         </form>
 
         <div id="result" class="mt-5"></div>
     </div>
+
     <script>
-        // Handle dynamic row addition and removal
         document.addEventListener('click', function(event) {
             if (event.target.classList.contains('add')) {
                 const row = event.target.parentElement;
                 const clone = row.cloneNode(true);
-                const index = document.querySelectorAll('#estimator .row').length;
-                clone.querySelector('select[name^="product_"]').name = `product_${index}`;
-                clone.querySelector('select[name^="quantity_"]').name = `quantity_${index}`;
-                clone.querySelector('select[name^="product_"]').value = ''; // Reset cloned product
-                clone.querySelector('select[name^="quantity_"]').value = ''; // Reset cloned quantity
                 document.getElementById('estimator').appendChild(clone);
             } else if (event.target.classList.contains('remove')) {
                 const row = event.target.parentElement;
@@ -131,102 +106,34 @@
             }
         });
 
-        // Handle cost estimation form submission
-        document.querySelector('#costEstimatorForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            document.getElementById('loading').style.display = 'block'; // Show loading indicator
+        async function submitEstimatorData() {
+            const rows = document.querySelectorAll('#estimator .row');
+            const data = Array.from(rows).map(row => {
+                const product = row.querySelector('.product').value;
+                const quantity = row.querySelector('.quantity').value;
+                return { product, quantity };
+            });
 
-            const response = await fetch('/calculate_costs', {
+            const response = await fetch('/estimate_costs', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: data })
             });
             const result = await response.json();
-            document.getElementById('loading').style.display = 'none'; // Hide loading indicator
-            
-            if (response.ok) {
-                document.getElementById('result').innerHTML = `
-                    <h4>Total Cost: ${result.total_cost}</h4>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Product Matched</th>
-                                <th>Keyword</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total Cost</th>
-                                <th>Supplier</th>
-                                <th>Location</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${result.breakdown.map(row => `
-                                <tr>
-                                    <td>${row['Product (Matched)']}</td>
-                                    <td>${row['Keyword']}</td>
-                                    <td>${row['Quantity']}</td>
-                                    <td>${row['Unit Price']}</td>
-                                    <td>${row['Total Cost']}</td>
-                                    <td>${row['Supplier']}</td>
-                                    <td>${row['Location']}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-            } else {
-                document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while calculating costs.'}</p>`;
-            }
-        });
-
-   // Handle supplier recommendations form submission
-   document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    document.getElementById('loading').style.display = 'block'; // Show loading indicator
-
-    const response = await fetch('/recommend_suppliers', {
-        method: 'POST',
-        body: formData,
-    });
-
-    const result = await response.json();
-    document.getElementById('loading').style.display = 'none'; // Hide loading indicator
-
-    if (response.ok) {
-        if (result.results && result.results.length > 0) {
-            document.getElementById('result').innerHTML = `
-                <h4>Recommended Suppliers</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Supplier</th>
-                            <th>Location</th>
-                            <th>Price</th>
-                            <th>Matched Product</th>
-                            <th>URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${result.results.map(row => `
-                            <tr>
-                                <td>${row['Supplier'] || 'N/A'}</td>
-                                <td>${row['Location'] || 'N/A'}</td>
-                                <td>${row['Price'] || 'N/A'}</td>
-                                <td>${row['Matched Product'] || 'N/A'}</td>
-                                <td><a href="${row['URL']}" target="_blank">${row['URL'] ? 'View' : 'N/A'}</a></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        } else {
-            document.getElementById('result').innerHTML = `<p class="text-warning">No suppliers found for the given criteria.</p>`;
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
         }
-    } else {
-        document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while fetching recommendations.'}</p>`;
-    }
-});
+
+        async function recommendSuppliers() {
+            const productKeyword = document.getElementById('productKeyword').value;
+            const preferredLocation = document.getElementById('preferredLocation').value;
+            const response = await fetch('/recommend_suppliers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_keyword: productKeyword, preferred_location: preferredLocation })
+            });
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+        }
     </script>
 </body>
 </html>
