@@ -565,13 +565,13 @@ def calculate_costs(conn, items):
 
             # Step 1: Find products that match the keyword
             cursor.execute(""" 
-                SELECT Product, Price
+                SELECT Product, Price, Seller_name, Location, URL
                 FROM fb_jiji_merged_tb
                 WHERE LOWER(Product) LIKE LOWER(?);
             """, (f"%{product_keyword}%",))
             matched_products = cursor.fetchall()
 
-            # Step 2: Calculate the average price
+            # Step 2: If no products match, log and continue
             if not matched_products:
                 breakdown.append({
                     "Product (Matched)": "Not Found",
@@ -584,22 +584,23 @@ def calculate_costs(conn, items):
                 })
                 continue
 
-            average_price = sum(price for _, price in matched_products) / len(matched_products)
+            # Step 3: Calculate the average price
+            average_price = sum(price for _, price, *_ in matched_products) / len(matched_products)
 
-            # Step 3: Find the product with the price closest to the average price
+            # Step 4: Find the product with the price closest to the average price
             best_match = min(matched_products, key=lambda x: abs(x[1] - average_price))
 
-            # Step 4: Calculate total cost for the best match
+            # Step 5: Calculate total cost for the best match
             cost = best_match[1] * quantity
             total_cost += cost
             breakdown.append({
                 "Product (Matched)": best_match[0],
                 "Quantity": quantity,
-                "Supplier": "N/A",  # You can modify this to fetch supplier info if needed
+                "Supplier": best_match[2],  # Get supplier from matched product
                 "Total Cost": cost,
                 "Unit Price": best_match[1],
-                "Location": "N/A",  # Optionally, you can fetch location if needed
-                "URL": "N/A",  # Optionally, you can fetch URL if needed
+                "Location": best_match[3],  # Get location from matched product
+                "URL": best_match[4],  # Get URL from matched product
             })
         except Exception as e:
             logging.error(f"Error in cost calculation: {e}")
