@@ -197,30 +197,37 @@
         // Handle dynamic row addition and removal for Cost Estimation
         document.addEventListener('click', function(event) {
             if (event.target.classList.contains('add')) {
-                const row = event.target.parentElement;
-                const clone = row.cloneNode(true);
-                const index = document.querySelectorAll('#estimator .row').length;
-                clone.querySelector('select[name^="product_"]').name = `product_${index}`;
-                clone.querySelector('select[name^="quantity_"]').name = `quantity_${index}`;
-                clone.querySelector('select[name^="product_"]').value = ''; // Reset cloned product
-                clone.querySelector('select[name^="quantity_"]').value = ''; // Reset cloned quantity
+                const row = event.target.closest('.row'); // Get the current row
+                const clone = row.cloneNode(true); // Clone the current row
+                const index = document.querySelectorAll('#estimator .row').length; // Get the current number of rows
+    
+                // Update the cloned row's fields
+                const productSelect = clone.querySelector('select[name^="product_"]');
+                const quantitySelect = clone.querySelector('select[name^="quantity_"]');
+                productSelect.name = `product_${index}`;
+                quantitySelect.name = `quantity_${index}`;
+                productSelect.value = ''; // Reset the product field
+                quantitySelect.value = ''; // Reset the quantity field
+    
+                // Append the cloned row to the estimator container
                 document.getElementById('estimator').appendChild(clone);
             } else if (event.target.classList.contains('remove')) {
-                const row = event.target.parentElement;
-                if (document.getElementById('estimator').children.length > 1) {
-                    row.remove();
+                const row = event.target.closest('.row'); // Get the current row
+                const estimator = document.getElementById('estimator');
+                if (estimator.children.length > 1) {
+                    row.remove(); // Remove the row if there's more than one
                 } else {
                     alert('At least one row must remain.');
                 }
             }
         });
-
+    
         // Handle cost estimation form submission
         document.querySelector('#costEstimatorForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(event.target);
             document.getElementById('loading').style.display = 'block'; // Show loading indicator
-
+    
             const items = Array.from(document.querySelectorAll('#estimator .row')).map(row => {
                 const productSelect = row.querySelector('select[name^="product_"]');
                 const quantitySelect = row.querySelector('select[name^="quantity_"]');
@@ -229,7 +236,7 @@
                     quantity: quantitySelect.value
                 };
             });
-
+    
             const response = await fetch('/estimate_costs', {
                 method: 'POST',
                 body: JSON.stringify({ items }),
@@ -237,7 +244,7 @@
                     'Content-Type': 'application/json'
                 }
             });
-
+    
             const result = await response.json();
             document.getElementById('loading').style.display = 'none'; // Hide loading indicator
             
@@ -275,13 +282,13 @@
                 document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while calculating costs.'}</p>`;
             }
         });
-
+    
         // Handle supplier recommendations form submission
         document.querySelector('#supplierForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(event.target);
             document.getElementById('loading').style.display = 'block'; // Show loading indicator
-
+    
             const response = await fetch('/recommend_suppliers', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -293,10 +300,10 @@
                     'Content-Type': 'application/json'
                 }
             });
-
+    
             const result = await response.json();
             document.getElementById('loading').style.display = 'none'; // Hide loading indicator
-
+    
             if (response.ok) {
                 if (result.results && result.results.length > 0) {
                     document.getElementById('result').innerHTML = `
@@ -331,6 +338,6 @@
                 document.getElementById('result').innerHTML = `<p class="text-danger">${result.error || 'An error occurred while fetching recommendations.'}</p>`;
             }
         });
-    </script>
+    </script>    
 </body>
 </html>
